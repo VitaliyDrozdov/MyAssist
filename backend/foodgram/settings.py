@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,7 +26,7 @@ SECRET_KEY = "django-insecure-5-7@j^utbz7ojvj&f#__9id1!oo!#m5ey0u(5yyq=oww3g9!7c
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -37,11 +38,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "rest_framework",
     "djoser",
-    "api",
+    "rest_framework",
     "users.apps.UsersConfig",
     "recipe.apps.RecipeConfig",
+    "api",
+    # "debug_toolbar",
 ]
 
 MIDDLEWARE = [
@@ -74,6 +76,8 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "foodgram.wsgi.application"
+
+AUTH_USER_MODEL = "users.CustomUser"
 
 
 # Database
@@ -123,6 +127,9 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATICFILES_DIRS = (BASE_DIR / "static/",)
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
