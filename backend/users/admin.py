@@ -2,12 +2,33 @@ from django.contrib import admin
 
 from users.models import CustomUser, Subscription
 
+admin.site.empty_value_display = "Null"
+
 
 @admin.register(CustomUser)
 class CustomUserModel(admin.ModelAdmin):
-    pass
+    list_display = (
+        "email",
+        "username",
+        "first_name",
+        "last_name",
+        "password",
+        "avatar",
+        "is_subscribed",
+    )
+    list_editable = (
+        "username",
+        "first_name",
+        "last_name",
+        "password",
+        "avatar",
+        "is_subscribed",
+    )
+    search_fields = ("username", "email")
 
 
 @admin.register(Subscription)
 class Subscription(admin.ModelAdmin):
-    pass
+    list_display = ("user", "following")
+    list_editable = ("following",)
+    list_display_links = ("user",)

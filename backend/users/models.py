@@ -7,24 +7,22 @@ from django.contrib.auth import get_user_model
 
 
 class CustomUser(AbstractUser):
-    email = models.EmailField(
-        name="email", max_length=254, validators=[EmailValidator()]
-    )
+    email = models.EmailField(max_length=254, validators=[EmailValidator()])
     username = models.CharField(
-        name="Пользователь",
+        verbose_name="Пользователь",
         max_length=150,
         unique=True,
         validators=[
             AbstractUser.username_validator,
         ],
     )
-    first_name = models.CharField(name="Имя", max_length=150)
-    last_name = models.CharField(name="Фамилия", max_length=150)
-    password = models.CharField(name="Пароль", max_length=128)
+    first_name = models.CharField(verbose_name="Имя", max_length=150)
+    last_name = models.CharField(verbose_name="Фамилия", max_length=150)
+    password = models.CharField(verbose_name="Пароль", max_length=128)
     avatar = models.ImageField(
-        name="Изображение", upload_to="avatars", null=True, blank=True
+        verbose_name="Изображение", upload_to="avatars", null=True, blank=True
     )
-    is_subscribed = models.BooleanField(name="Подписка")
+    is_subscribed = models.BooleanField(verbose_name="Подписка", null=True)
 
     class Meta:
         verbose_name = "CustomUser"

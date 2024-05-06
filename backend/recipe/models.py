@@ -15,9 +15,11 @@ class Ingredient(models.Model):
         ML = "мл", _("Миллилитры")
         TEASPOON = "ч.л.", _("Чайная ложка")
 
-    name = models.CharField(name="Имя ингредиента", max_length=128)
+    name = models.CharField(max_length=128)
     measurement_unit = models.CharField(
-        name="Единицы измерения", choices=MeasureChoices.choices, max_length=64
+        choices=MeasureChoices.choices,
+        max_length=64,
+        verbose_name="Единицы измерения",
     )
 
     class Meta:
@@ -29,8 +31,8 @@ class Ingredient(models.Model):
 
 
 class Tag(models.Model):
-    name = models.CharField(name="Имя тэга", max_length=25)
-    slug = models.SlugField(name="Слаг", unique=True, max_length=50)
+    name = models.CharField(verbose_name="Имя тэга", max_length=25)
+    slug = models.SlugField(verbose_name="Слаг", unique=True, max_length=50)
 
     class Meta:
         verbose_name = "Tag"
@@ -44,25 +46,25 @@ class Recipe(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="recipes", db_index=True
     )
-    name = models.CharField(name="Наименование рецепта", max_length=256)
+    name = models.CharField(verbose_name="Наименование рецепта", max_length=256)
     # поле image нужно будет заменить на другой тип
     image = models.ImageField(
-        name="Изображение", upload_to="recipes", null=True, blank=True
+        verbose_name="Изображение", upload_to="recipes", null=True, blank=True
     )
-    text = models.TextField(name="Описание")
+    text = models.TextField(verbose_name="Описание")
     ingredients = models.ManyToManyField(
         name="Ингредиенты",
         to=Ingredient,
         related_name="recipes",
     )
-    tag = models.ManyToManyField(name="Тэг", to=Tag, related_name="recipes")
+    tag = models.ManyToManyField(verbose_name="Тэг", to=Tag, related_name="recipes")
     cooking_time = models.IntegerField(
         name="Время приготовления", validators=[MinValueValidator(1)]
     )
-    is_favorited = models.BooleanField(name="В избранном")
-    is_in_shopping_car = models.BooleanField(name="В списке покупок")
+    is_favorited = models.BooleanField(verbose_name="В избранном")
+    is_in_shopping_car = models.BooleanField(verbose_name="В списке покупок")
     pub_date = models.DateTimeField(
-        name="Дата публикации", auto_now_add=True, db_index=True
+        verbose_name="Дата публикации", auto_now_add=True, db_index=True
     )
 
     class Meta:
