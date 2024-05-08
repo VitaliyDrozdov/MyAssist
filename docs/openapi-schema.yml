@@ -470,8 +470,6 @@ paths:
           description: ''
         '404':
           $ref: '#/components/responses/NotFound'
-        '401':
-          $ref: '#/components/responses/AuthenticationError'
       tags:
         - Пользователи
   /api/users/me/:
@@ -794,7 +792,7 @@ components:
           example: false
         avatar:
           type: string
-          format: url
+          format: uri
           description: 'Ссылка на аватар'
           example: 'http://foodgram.example.org/media/users/image.png'
       required:
@@ -839,7 +837,7 @@ components:
           description: 'Общее количество рецептов пользователя'
         avatar:
           type: string
-          format: url
+          format: uri
           description: 'Ссылка на аватар'
           example: 'http://foodgram.example.org/media/users/image.png'
     SetAvatar:
@@ -858,7 +856,7 @@ components:
       properties:
         avatar:
           type: string
-          format: url
+          format: uri
           description: 'Ссылка на аватар'
           example: 'http://foodgram.example.org/media/users/image.png'
 
@@ -889,47 +887,47 @@ components:
           description: 'Уникальный id'
         tags:
           description: 'Список тегов'
+          readOnly: true
           type: array
           items:
             $ref: '#/components/schemas/Tag'
         author:
+          readOnly: true
           $ref: '#/components/schemas/User'
         ingredients:
+          readOnly: true
           description: 'Список ингредиентов'
           type: array
           items:
             $ref: '#/components/schemas/IngredientInRecipe'
         is_favorited:
+          readOnly: true
           type: boolean
           description: 'Находится ли в избранном'
         is_in_shopping_cart:
+          readOnly: true
           type: boolean
           description: 'Находится ли в корзине'
         name:
+          readOnly: true
           type: string
           maxLength: 256
           description: 'Название'
         image:
+          readOnly: true
           description: 'Ссылка на картинку на сайте'
           example: 'http://foodgram.example.org/media/recipes/images/image.png'
           type: string
-          format: url
+          format: uri
         text:
+          readOnly: true
           description: 'Описание'
           type: string
         cooking_time:
+          readOnly: true
           description: 'Время приготовления (в минутах)'
           type: integer
           minimum: 1
-      required:
-        - tags
-        - author
-        - is_favorited
-        - is_in_shopping_cart
-        - name
-        - image
-        - text
-        - cooking_time
     RecipeMinified:
       type: object
       properties:
@@ -945,7 +943,7 @@ components:
           description: 'Ссылка на картинку на сайте'
           example: 'http://foodgram.example.org/media/recipes/images/image.png'
           type: string
-          format: url
+          format: uri
         cooking_time:
           description: 'Время приготовления (в минутах)'
           type: integer
@@ -953,9 +951,10 @@ components:
     RecipeGetShortLink:
       type: object
       properties:
-        short_link:
+        short-link:
           type: string
           description: 'Сокращенная ссылка'
+          format: uri
           example: 'https://foodgram.example.org/s/3d0'
     Ingredient:
       type: object
@@ -1028,7 +1027,6 @@ components:
           example: "Иванов"
         password:
           type: string
-          maxLength: 128
           description: "Пароль"
           example: "Qwerty123"
       required:
@@ -1136,6 +1134,9 @@ components:
           type: string
         email:
           type: string
+      required:
+        - password
+        - email
     TokenGetResponse:
       type: object
       properties:

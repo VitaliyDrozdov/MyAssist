@@ -20,7 +20,7 @@ class CustomUser(AbstractUser):
     last_name = models.CharField(verbose_name="Фамилия", max_length=150)
     password = models.CharField(verbose_name="Пароль", max_length=128)
     avatar = models.ImageField(
-        verbose_name="Изображение", upload_to="avatars", null=True, blank=True
+        verbose_name="Аватар", upload_to="avatars", null=True, blank=True
     )
     is_subscribed = models.BooleanField(verbose_name="Подписка", null=True)
 
