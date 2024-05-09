@@ -47,22 +47,25 @@ class Recipe(models.Model):
         User, on_delete=models.CASCADE, related_name="recipes", db_index=True
     )
     name = models.CharField(verbose_name="Наименование рецепта", max_length=256)
-    # поле image нужно будет заменить на другой тип
     image = models.ImageField(
         verbose_name="Изображение", upload_to="recipes", null=True, blank=True
     )
     text = models.TextField(verbose_name="Описание")
     ingredients = models.ManyToManyField(
-        name="Ингредиенты",
+        verbose_name="Ингредиенты",
         to=Ingredient,
         related_name="recipes",
     )
-    tag = models.ManyToManyField(verbose_name="Тэг", to=Tag, related_name="recipes")
+    tags = models.ManyToManyField(verbose_name="Тэг", to=Tag, related_name="recipes")
     cooking_time = models.IntegerField(
-        name="Время приготовления", validators=[MinValueValidator(1)]
+        verbose_name="Время приготовления", validators=[MinValueValidator(1)]
     )
-    is_favorited = models.BooleanField(verbose_name="В избранном")
-    is_in_shopping_car = models.BooleanField(verbose_name="В списке покупок")
+    is_favorited = models.BooleanField(
+        verbose_name="В избранном", blank=True, null=True
+    )
+    is_in_shopping_cart = models.BooleanField(
+        verbose_name="В списке покупок", blank=True, null=True
+    )
     pub_date = models.DateTimeField(
         verbose_name="Дата публикации", auto_now_add=True, db_index=True
     )
@@ -76,8 +79,8 @@ class Recipe(models.Model):
 
 
 class RecipeIngredient(models.Model):
-    recipe = models.ForeignKey(to=Recipe, on_delete=models.CASCADE)
-    ingredient = models.ForeignKey(to=Ingredient, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
     amount = models.IntegerField()
 
     class Meta:

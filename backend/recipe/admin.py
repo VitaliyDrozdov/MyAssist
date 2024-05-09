@@ -20,7 +20,7 @@ class RecipeAdmin(admin.ModelAdmin):
         "image",
         "text",
         "is_favorited",
-        "is_in_shopping_car",
+        "is_in_shopping_cart",
         "pub_date",
         "get_tag",
         "cnt_favoties",
@@ -30,15 +30,15 @@ class RecipeAdmin(admin.ModelAdmin):
         "image",
         "text",
         "is_favorited",
-        "is_in_shopping_car",
+        "is_in_shopping_cart",
     )
     list_display_links = ("author",)
     search_fields = ("author", "name")
-    list_filter = ("tag",)
+    list_filter = ("tags",)
 
     @admin.display(description="Тэг")
     def get_tag(self, obj):
-        return ", ".join(tag.name for tag in obj.tag.all())
+        return ", ".join(tag.name for tag in obj.tags.all())
 
     @admin.display(description="Количество в избранном")
     def cnt_favoties(self, obj):
