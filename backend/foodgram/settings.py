@@ -28,6 +28,9 @@ SECRET_KEY = "django-insecure-5-7@j^utbz7ojvj&f#__9id1!oo!#m5ey0u(5yyq=oww3g9!7c
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
 
 
 # Application definition
@@ -46,7 +49,7 @@ INSTALLED_APPS = [
     "users.apps.UsersConfig",
     "recipe.apps.RecipeConfig",
     "api",
-    # "debug_toolbar",
+    "debug_toolbar",
 ]
 
 MIDDLEWARE = [
@@ -57,6 +60,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = "foodgram.urls"

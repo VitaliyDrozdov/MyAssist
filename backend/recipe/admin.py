@@ -47,7 +47,7 @@ class RecipeAdmin(admin.ModelAdmin):
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
-    list_display = ("author", "recipe")
+    list_display = ("user", "recipe")
 
 
 @admin.register(ShoppingCart)

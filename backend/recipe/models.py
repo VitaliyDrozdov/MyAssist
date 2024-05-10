@@ -7,17 +7,16 @@ User = get_user_model()
 
 
 class Ingredient(models.Model):
-    class MeasureChoices(models.TextChoices):
-        GRAMM = "г", _("Граммы")
-        DROP = "капля", _("Капля")
-        PIECE = "шт.", _("Штуки")
-        BIGPIECE = "кусок", _("Кусок")
-        ML = "мл", _("Миллилитры")
-        TEASPOON = "ч.л.", _("Чайная ложка")
+    # class MeasureChoices(models.TextChoices):
+    #     GRAMM = "г", _("Граммы")
+    #     DROP = "капля", _("Капля")
+    #     PIECE = "шт.", _("Штуки")
+    #     BIGPIECE = "кусок", _("Кусок")
+    #     ML = "мл", _("Миллилитры")
+    #     TEASPOON = "ч.л.", _("Чайная ложка")
 
     name = models.CharField(max_length=128)
     measurement_unit = models.CharField(
-        choices=MeasureChoices.choices,
         max_length=64,
         verbose_name="Единицы измерения",
     )
@@ -54,6 +53,7 @@ class Recipe(models.Model):
     ingredients = models.ManyToManyField(
         verbose_name="Ингредиенты",
         to=Ingredient,
+        through="RecipeIngredient",
         related_name="recipes",
     )
     tags = models.ManyToManyField(verbose_name="Тэг", to=Tag, related_name="recipes")
@@ -80,7 +80,9 @@ class Recipe(models.Model):
 
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(
+        Ingredient, on_delete=models.CASCADE, related_name="ingredients"
+    )
     amount = models.IntegerField()
 
     class Meta:
@@ -89,7 +91,7 @@ class RecipeIngredient(models.Model):
 
 
 class Favorite(models.Model):
-    author = models.ForeignKey(
+    user = models.ForeignKey(
         to=User, on_delete=models.CASCADE, related_name="favorites"
     )
     recipe = models.ForeignKey(
