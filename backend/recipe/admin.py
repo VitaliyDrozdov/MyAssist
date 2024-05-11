@@ -52,7 +52,7 @@ class FavoriteAdmin(admin.ModelAdmin):
 
 @admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):
-    list_display = ("author", "recipe")
+    list_display = ("user", "recipe")
 
 
 @admin.register(Ingredient)
