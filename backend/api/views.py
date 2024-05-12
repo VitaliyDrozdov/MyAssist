@@ -12,22 +12,70 @@ from api.serializers import (
     RecipeCreateUpdateDeleteSerializer,
     FavoritesShoppingCartSerializer,
     RecipeIngredient,
+    ShortLinkSerializer,
+    SubscribeSerializer,
+    CustomUserProfileSerializer,
 )
 from recipe.models import Ingredient, Tag, Recipe, Favorite, ShoppingCart
-from rest_framework.pagination import LimitOffsetPagination
-from api.pagination import RecipesPagination
+from api.pagination import LimitPagination
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework import status
-from api.filters import RecipeFilter
+from api.filters import RecipeFilter, IngredientFilter
 from django.db.models import Sum
 from django.http import HttpResponse
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from users.models import Subscription
+from rest_framework.status import HTTP_400_BAD_REQUEST
 
 User = get_user_model()
 
 
-class CustomUserMeViewSet(DjoserUserViewset):
+class UserViewSet(DjoserUserViewset):
+    queryset = User.objects.all()
+    serializer_class = CustomUserProfileSerializer
+    pagination_class = LimitPagination
+    permission_classes = (AllowAny,)
 
-    @action(["get"], detail=False)
+    @action(
+        detail=True,
+        methods=["post", "delete"],
+        url_path="subscribe",
+        permission_classes=(IsAuthenticated,),
+    )
+    def subscribe(self, request, **kwargs):
+        user = request.user
+        following = get_object_or_404(User, id=self.kwargs.get("id"))
+        if request.method == "POST":
+            serializer = SubscribeSerializer(
+                following, data=request.data, context={"request": request}
+            )
+            serializer.is_valid(raise_exception=True)
+            Subscription.objects.create(user=user, following=following)
+            return Response(serializer.data)
+        elif request.method == "DELETE":
+            Subscription.objects.filter(following=following, user=user).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="subscriptions",
+        permission_classes=(IsAuthenticated,),
+    )
+    def subscriptions(self, request):
+        user = request.user
+        subscriptions = User.objects.filter(following__user=user)
+        if subscriptions:
+            pages = self.paginate_queryset(subscriptions)
+            serializer = SubscribeSerializer(
+                pages, many=True, context={"request": request}
+            )
+            # serializer.is_valid(raise_exception=True)
+            return self.get_paginated_response(serializer.data)
+        else:
+            return Response("Подписки отсутствуют", status=HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=["get"], permission_classes=(IsAuthenticated,))
     def me(self, request, *args, **kwargs):
         return super().me(request, *args, **kwargs)
 
@@ -35,8 +83,10 @@ class CustomUserMeViewSet(DjoserUserViewset):
 class IngredientListDetailViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
-    filter_backends = (filters.SearchFilter,)
+    filter_backends = (IngredientFilter,)
     search_fields = ("^name",)
+    permission_classes = (AllowAny,)
+    pagination_class = None
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -47,7 +97,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer
     queryset = Recipe.objects.all()
-    pagination_class = RecipesPagination
+    pagination_class = LimitPagination
     # filter_backends = (filters.OrderingFilter,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
@@ -101,3 +151,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         response["Content-Disposition"] = f"attachment; filename={filename}.txt"
 
         return response
+
+    @action(detail=True, methods=["get"], url_path="get-link")
+    def get_short_link(self, request, pk: int):
+        recipe = get_object_or_404(Recipe, id=pk)
+        serializer = ShortLinkSerializer(recipe)
+        # serializer.is_valid(raise_exception=True)
+        # serializer.save()
+        return Response(serializer.data)

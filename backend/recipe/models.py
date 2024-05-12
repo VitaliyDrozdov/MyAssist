@@ -1,3 +1,5 @@
+from random import choice, randint
+from string import ascii_lowercase, ascii_uppercase, digits
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
@@ -118,3 +120,25 @@ class ShoppingCart(models.Model):
 
     def __str__(self):
         return "Список покупок"
+
+
+class Link(models.Model):
+    original_link = models.URLField()
+    short_link = models.SlugField(max_length=10, unique=True)
+
+    class Meta:
+        verbose_name = "Link"
+        verbose_name_plural = "Links"
+
+    def __str__(self):
+        return self.short_link
+
+    # def get_short_code(self, length=7):
+    #     LINK_CHARS = ascii_lowercase + ascii_uppercase + digits
+    #     chars_len = len(LINK_CHARS) - 1
+    #     return "".join(LINK_CHARS[randint(0, chars_len)] for i in range(length))
+
+    # def save(self, *args, **kwargs):
+    #     if not self.pk:
+    #         self.short_code = self.generate_short_code()
+    #     return super().save(*args, **kwargs)

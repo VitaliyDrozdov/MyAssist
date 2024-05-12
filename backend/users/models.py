@@ -7,7 +7,9 @@ from django.contrib.auth import get_user_model
 
 
 class CustomUser(AbstractUser):
-    email = models.EmailField(max_length=254, validators=[EmailValidator()])
+    email = models.EmailField(
+        max_length=254, validators=[EmailValidator()], unique=True
+    )
     username = models.CharField(
         verbose_name="Пользователь",
         max_length=150,
@@ -34,10 +36,16 @@ class CustomUser(AbstractUser):
 
 class Subscription(models.Model):
     user = models.ForeignKey(
-        to=CustomUser, on_delete=models.CASCADE, related_name="follower"
+        to=CustomUser,
+        on_delete=models.CASCADE,
+        related_name="follower",
+        verbose_name="Пользователь",
     )
     following = models.ForeignKey(
-        to=CustomUser, on_delete=models.CASCADE, related_name="following"
+        to=CustomUser,
+        on_delete=models.CASCADE,
+        related_name="following",
+        verbose_name="Подписчик",
     )
 
     class Meta:
@@ -48,7 +56,7 @@ class Subscription(models.Model):
                 fields=["user", "following"], name="unique_user_following"
             ),
             models.CheckConstraint(
-                check=models.Q(user=models.F("following")), name="prevent_self_follow"
+                check=models.Q(user=models.F("user")), name="prevent_self_follow"
             ),
         ]
 
