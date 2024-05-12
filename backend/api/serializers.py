@@ -45,9 +45,6 @@ class CustomUserProfileSerializer(DjoserMeUS):
         return Subscription.objects.filter(user=user, following=obj).exists()
 
 
-# class SubscribeSerializer(CustomUserProfileSerializer):
-
-
 class SubscribeSerializer(serializers.ModelSerializer):
     recipes_count = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
@@ -140,25 +137,6 @@ class RecipeSerializer(serializers.ModelSerializer):
             "cooking_time",
         )
 
-    def validate_ingredients(self, data):
-        if not data:
-            raise serializers.ValidationError(
-                "Поле 'ingredients' не может быть пустым."
-            )
-        for ingredient in data:
-            if not Ingredient.objects.filter(id=ingredient.get("id")).exists():
-                raise serializers.ValidationError(f"Ингредиент не существует.")
-            if ingredient.get("amount", 0) <= 0:
-                raise serializers.ValidationError(
-                    f"Количество должно быть больше нуля."
-                )
-            ingr_ids = set()
-            if cur_id := ingredient.get("id") in ingr_ids:
-                raise serializers.ValidationError(f"Ингредиент уже добавлен.")
-            ingr_ids.add(cur_id)
-
-        return data
-
     def get_ingredients(self, obj: Recipe):
         ingredients_data = []
         recipe_ingredients = obj.recipeingredient_set.all()
@@ -203,6 +181,39 @@ class RecipeCreateUpdateDeleteSerializer(serializers.ModelSerializer):
             "text",
             "cooking_time",
         )
+
+    def to_representation(self, intance):
+        return RecipeSerializer(intance, context=self.context).data
+
+    def validate_ingredients(self, data):
+        if not data:
+            raise serializers.ValidationError("Нужно указать ингредиенты.")
+        for ingredient in data:
+            if not Ingredient.objects.filter(id=ingredient.get("id")).exists():
+                raise serializers.ValidationError(f"Ингредиент не существует.")
+            if not type(amount := ingredient.get("amount", 0)) is int:
+                raise serializers.ValidationError(f"Количество должно быть числом.")
+            if amount <= 0:
+                raise serializers.ValidationError(
+                    f"Количество должно быть больше нуля."
+                )
+            ingr_ids = set()
+            if cur_id := ingredient.get("id") in ingr_ids:
+                raise serializers.ValidationError(f"Ингредиент уже добавлен.")
+            ingr_ids.add(cur_id)
+        return data
+
+    # тут что то неверно. Падают тесты.
+
+    # def validate_tags(self, data):
+    #     if not data:
+    #         raise serializers.ValidationError("Нужно указать тэги.")
+    #     for tag in data:
+    #         tag_ids = set()
+    #         if cur_id := tag.get("id") in tag_ids:
+    #             raise serializers.ValidationError(f"Тэг уже добавлен.")
+    #         tag_ids.add(cur_id)
+    #     return data
 
     def add_tags_ingredients(self, obj: Recipe, tags_data=None, ingredients_data=None):
         if "tags" in self.validated_data:

@@ -4,12 +4,7 @@ from rest_framework.filters import SearchFilter
 
 
 class IngredientFilter(SearchFilter):
-    # name = filters.CharFilter(lookup_expr="startswith")
     search_param = "name"
-
-    # class Meta:
-    #     model = Ingredient
-    #     fields = ("name",)
 
 
 class RecipeFilter(filters.FilterSet):

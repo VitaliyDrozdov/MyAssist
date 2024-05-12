@@ -51,7 +51,7 @@ class UserViewSet(DjoserUserViewset):
             )
             serializer.is_valid(raise_exception=True)
             Subscription.objects.create(user=user, following=following)
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "DELETE":
             Subscription.objects.filter(following=following, user=user).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -98,10 +98,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer
     queryset = Recipe.objects.all()
     pagination_class = LimitPagination
-    # filter_backends = (filters.OrderingFilter,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
-    # ordering = ("-pub_date",)
 
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
@@ -114,7 +112,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if request.method == "POST":
             Favorite.objects.create(recipe=recipe, user=request.user)
             serializer = FavoritesShoppingCartSerializer(recipe)
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "DELETE":
             Favorite.objects.filter(recipe=recipe, user=request.user).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -125,7 +123,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if request.method == "POST":
             ShoppingCart.objects.create(recipe=recipe, user=request.user)
             serializer = FavoritesShoppingCartSerializer(recipe)
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "DELETE":
             ShoppingCart.objects.filter(recipe=recipe, user=request.user).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -159,3 +157,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
         # serializer.is_valid(raise_exception=True)
         # serializer.save()
         return Response(serializer.data)
+
+
+# "test"
