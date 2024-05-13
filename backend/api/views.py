@@ -36,7 +36,6 @@ class UserViewSet(DjoserUserViewset):
     queryset = User.objects.all()
     serializer_class = CustomUserProfileSerializer
     pagination_class = LimitPagination
-    # permission_classes = (AllowAny,)
 
     @action(
         detail=True,
@@ -81,7 +80,12 @@ class UserViewSet(DjoserUserViewset):
     def me(self, request, *args, **kwargs):
         return super().me(request, *args, **kwargs)
 
-    @action(detail=False, methods=["put", "patch", "delete"], url_path="me/avatar")
+    @action(
+        detail=False,
+        methods=["put", "patch", "delete"],
+        url_path="me/avatar",
+        permission_classes=(IsAuthenticated,),
+    )
     def set_avatar(self, request):
         if request.method == "PUT" or request.method == "PATCH":
             serializer = AvatarSerializer(request.user, data=request.data, partial=True)

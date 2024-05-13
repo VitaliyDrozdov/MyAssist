@@ -41,6 +41,12 @@ class AvatarSerializer(serializers.ModelSerializer):
         model = User
         fields = ("avatar",)
 
+    def validate(self, data):
+        avatar = data.get("avatar", None)
+        if not avatar:
+            raise serializers.ValidationError("Необходимо прикрепить аватар.")
+        return data
+
 
 class CustomUserCreateSerializer(DjoserCreateUS):
     class Meta:
