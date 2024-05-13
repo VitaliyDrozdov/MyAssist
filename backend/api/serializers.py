@@ -8,13 +8,38 @@ from djoser.serializers import (
     UserSerializer as DjoserMeUS,
 )
 from rest_framework import serializers
-from recipe.models import Ingredient, Tag, Recipe, RecipeIngredient, Link
+from recipe.models import (
+    Ingredient,
+    Tag,
+    Recipe,
+    RecipeIngredient,
+    Link,
+    ShoppingCart,
+    Favorite,
+)
 from users.models import Subscription
 from string import ascii_lowercase, ascii_uppercase, digits
-from django.utils.crypto import get_random_string
 
 
 User = get_user_model()
+
+
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data: str):
+        if isinstance(data, str) and data.startswith("data:image"):
+            format, imgstr = data.split(";base64,")
+            ext = format.split("/")[-1]
+            data = ContentFile(base64.b64decode(imgstr), name="temp." + ext)
+
+        return super().to_internal_value(data)
+
+
+class AvatarSerializer(serializers.ModelSerializer):
+    avatar = Base64ImageField()
+
+    class Meta:
+        model = User
+        fields = ("avatar",)
 
 
 class CustomUserCreateSerializer(DjoserCreateUS):
@@ -25,6 +50,7 @@ class CustomUserCreateSerializer(DjoserCreateUS):
 
 class CustomUserProfileSerializer(DjoserMeUS):
     is_subscribed = serializers.SerializerMethodField()
+    avatar = Base64ImageField()
 
     class Meta:
         model = User
@@ -82,21 +108,20 @@ class SubscribeSerializer(serializers.ModelSerializer):
             return False
         return Subscription.objects.filter(user=user, following=obj).exists()
 
+    def validate(self, data):
+        user = self.context.get("request").user
+        following = data.get("following")
+        if user == following:
+            raise serializers.ValidationError("Нельзя подписываться насамого себя.")
+        if Subscription.objects.filter(user=user, following=following).exists():
+            raise serializers.ValidationError("Подписка уже существует.")
+        return data
+
 
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
         fields = ("id", "name", "measurement_unit")
-
-
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data: str):
-        if isinstance(data, str) and data.startswith("data:image"):
-            format, imgstr = data.split(";base64,")
-            ext = format.split("/")[-1]
-            data = ContentFile(base64.b64decode(imgstr), name="temp." + ext)
-
-        return super().to_internal_value(data)
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -188,6 +213,7 @@ class RecipeCreateUpdateDeleteSerializer(serializers.ModelSerializer):
     def validate_ingredients(self, data):
         if not data:
             raise serializers.ValidationError("Нужно указать ингредиенты.")
+        ingr_ids = set()
         for ingredient in data:
             if not Ingredient.objects.filter(id=ingredient.get("id")).exists():
                 raise serializers.ValidationError(f"Ингредиент не существует.")
@@ -197,28 +223,27 @@ class RecipeCreateUpdateDeleteSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     f"Количество должно быть больше нуля."
                 )
-            ingr_ids = set()
-            if cur_id := ingredient.get("id") in ingr_ids:
+            if (cur_id := ingredient.get("id")) in ingr_ids:
                 raise serializers.ValidationError(f"Ингредиент уже добавлен.")
             ingr_ids.add(cur_id)
         return data
 
-    # тут что то неверно. Падают тесты.
-
-    # def validate_tags(self, data):
-    #     if not data:
-    #         raise serializers.ValidationError("Нужно указать тэги.")
-    #     for tag in data:
-    #         tag_ids = set()
-    #         if cur_id := tag.get("id") in tag_ids:
-    #             raise serializers.ValidationError(f"Тэг уже добавлен.")
-    #         tag_ids.add(cur_id)
-    #     return data
+    def validate_tags(self, data):
+        if not data:
+            raise serializers.ValidationError("Нужно указать тэги.")
+        tag_ids = set()
+        for tag in data:
+            if tag in tag_ids:
+                raise serializers.ValidationError(f"Тэг уже добавлен.")
+            tag_ids.add(tag)
+        return data
 
     def add_tags_ingredients(self, obj: Recipe, tags_data=None, ingredients_data=None):
         if "tags" in self.validated_data:
             tags_data = self.validated_data.pop("tags")
             obj.tags.set(tags_data)
+        else:
+            raise serializers.ValidationError("Нужно указать тэги.")
         if "ingredients" in self.validated_data:
             ingredients_data = self.validated_data.pop("ingredients")
             for ingredient_data in ingredients_data:
@@ -227,10 +252,12 @@ class RecipeCreateUpdateDeleteSerializer(serializers.ModelSerializer):
                     ingredient=Ingredient.objects.get(id=ingredient_data["id"]),
                     amount=ingredient_data["amount"],
                 )
+        else:
+            raise serializers.ValidationError("Нужно указать ингредиенты.")
         return obj
 
     def create(self, validated_data):
-        validated_data["author"] = self.context["request"].user
+        # validated_data["author"] = self.context["request"].user
         tags_data = validated_data.pop("tags")
         ingredients_data = validated_data.pop("ingredients")
         recipe = Recipe.objects.create(**validated_data)
@@ -256,6 +283,15 @@ class FavoritesShoppingCartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ("id", "name", "image", "cooking_time")
+
+    def validate(self, data):
+        user = self.context.get("request").user
+        recipe = data.get("recipe")
+        if ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
+            raise serializers.ValidationError("Рецепт уже добавлен.")
+        if Favorite.objects.filter(user=user, recipe=recipe).exists():
+            raise serializers.ValidationError("Рецепт уже добавлен.")
+        return data
 
 
 class ShortLinkSerializer(serializers.ModelSerializer):

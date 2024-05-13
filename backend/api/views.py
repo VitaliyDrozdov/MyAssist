@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet as DjoserUserViewset
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework import viewsets, mixins, filters
+from rest_framework import viewsets
 from django_filters.rest_framework import DjangoFilterBackend
 from api.serializers import (
     IngredientSerializer,
@@ -15,6 +15,7 @@ from api.serializers import (
     ShortLinkSerializer,
     SubscribeSerializer,
     CustomUserProfileSerializer,
+    AvatarSerializer,
 )
 from recipe.models import Ingredient, Tag, Recipe, Favorite, ShoppingCart
 from api.pagination import LimitPagination
@@ -24,6 +25,7 @@ from api.filters import RecipeFilter, IngredientFilter
 from django.db.models import Sum
 from django.http import HttpResponse
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from api.permissions import IsAuthorAdminOrReadOnly
 from users.models import Subscription
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
@@ -34,7 +36,7 @@ class UserViewSet(DjoserUserViewset):
     queryset = User.objects.all()
     serializer_class = CustomUserProfileSerializer
     pagination_class = LimitPagination
-    permission_classes = (AllowAny,)
+    # permission_classes = (AllowAny,)
 
     @action(
         detail=True,
@@ -79,6 +81,18 @@ class UserViewSet(DjoserUserViewset):
     def me(self, request, *args, **kwargs):
         return super().me(request, *args, **kwargs)
 
+    @action(detail=False, methods=["put", "patch", "delete"], url_path="me/avatar")
+    def set_avatar(self, request):
+        if request.method == "PUT" or request.method == "PATCH":
+            serializer = AvatarSerializer(request.user, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        elif request.method == "DELETE":
+            request.user.avatar.delete(save=True)
+            request.user.save()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class IngredientListDetailViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
@@ -100,6 +114,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
     pagination_class = LimitPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
+    permission_classes = (IsAuthorAdminOrReadOnly,)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
@@ -143,11 +161,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 f'({ingredient["ingredient__measurement_unit"]})'
                 f' - {ingredient["amount"]}\n'
             )
-
         filename = f"{user.username}_shopping_list.txt"
         response = HttpResponse(shopping_list, content_type="text/plain")
         response["Content-Disposition"] = f"attachment; filename={filename}.txt"
-
         return response
 
     @action(detail=True, methods=["get"], url_path="get-link")
@@ -157,6 +173,3 @@ class RecipeViewSet(viewsets.ModelViewSet):
         # serializer.is_valid(raise_exception=True)
         # serializer.save()
         return Response(serializer.data)
-
-
-# "test"
