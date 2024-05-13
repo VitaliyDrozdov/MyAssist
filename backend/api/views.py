@@ -1,3 +1,4 @@
+from django.shortcuts import redirect
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet as DjoserUserViewset
@@ -10,14 +11,15 @@ from api.serializers import (
     TagSerializer,
     RecipeSerializer,
     RecipeCreateUpdateDeleteSerializer,
-    FavoritesShoppingCartSerializer,
+    FavoritesSerializer,
     RecipeIngredient,
     ShortLinkSerializer,
     SubscribeSerializer,
     CustomUserProfileSerializer,
     AvatarSerializer,
+    ShoppingCartSerializer,
 )
-from recipe.models import Ingredient, Tag, Recipe, Favorite, ShoppingCart
+from recipe.models import Ingredient, Tag, Recipe, Favorite, ShoppingCart, Link
 from api.pagination import LimitPagination
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework import status
@@ -28,6 +30,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from api.permissions import IsAuthorAdminOrReadOnly
 from users.models import Subscription
 from rest_framework.status import HTTP_400_BAD_REQUEST
+from django.http import Http404
 
 User = get_user_model()
 
@@ -130,23 +133,48 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post", "delete"], url_path="favorite")
     def favorite(self, request, pk: int):
-        recipe = get_object_or_404(Recipe, id=pk)
+        try:
+            recipe = get_object_or_404(Recipe, id=pk)
+        except Http404:
+            return Response(status=HTTP_400_BAD_REQUEST)
+        # except Recipe.DoesNotExist:
+        #     return Response(status=HTTP_400_BAD_REQUEST)
         if request.method == "POST":
-            Favorite.objects.create(recipe=recipe, user=request.user)
-            serializer = FavoritesShoppingCartSerializer(recipe)
+            serializer = FavoritesSerializer(
+                data={"user": request.user.id, "recipe": recipe.id},
+                context={"request": request},
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "DELETE":
+            # try:
+            #     Favorite.objects.filter(recipe=recipe, user=request.user).delete()
+            # except Favorite.DoesNotExist:
             Favorite.objects.filter(recipe=recipe, user=request.user).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["post", "delete"], url_path="shopping_cart")
     def shopping_cart(self, request, pk: int):
-        recipe = get_object_or_404(Recipe, id=pk)
+        try:
+            recipe = get_object_or_404(Recipe, id=pk)
+        except Http404:
+            return Response(status=HTTP_400_BAD_REQUEST)
+        # except Recipe.DoesNotExist:
+        #     return Response(status=HTTP_400_BAD_REQUEST)
         if request.method == "POST":
-            ShoppingCart.objects.create(recipe=recipe, user=request.user)
-            serializer = FavoritesShoppingCartSerializer(recipe)
+            serializer = ShoppingCartSerializer(
+                data={"user": request.user.id, "recipe": recipe.id},
+                context={"request": request},
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "DELETE":
+            # try:
+            #     ShoppingCart.objects.filter(recipe=recipe, user=request.user).delete()
+            # except ShoppingCart.DoesNotExist:
+            #     return Response(status=HTTP_400_BAD_REQUEST)
             ShoppingCart.objects.filter(recipe=recipe, user=request.user).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -172,8 +200,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["get"], url_path="get-link")
     def get_short_link(self, request, pk: int):
-        recipe = get_object_or_404(Recipe, id=pk)
-        serializer = ShortLinkSerializer(recipe)
-        # serializer.is_valid(raise_exception=True)
-        # serializer.save()
-        return Response(serializer.data)
+        # recipe = get_object_or_404(Recipe, id=pk)
+        recipe_url = request.build_absolute_uri(f"/api/recipes/{pk}/")
+        link = Link.create_short_link(recipe_url)
+        # link = Link(recipe_url)
+        serializer = ShortLinkSerializer(link)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+def redirect_to_recipe(request, short_link):
+    link = get_object_or_404(Link, short_link=short_link)
+    return redirect(link.original_link)

@@ -4,6 +4,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.utils.translation import gettext_lazy as _
+import uuid
 
 User = get_user_model()
 
@@ -124,7 +125,8 @@ class ShoppingCart(models.Model):
 
 class Link(models.Model):
     original_link = models.URLField()
-    short_link = models.SlugField(max_length=10, unique=True)
+    short_link = models.SlugField(max_length=6, unique=True, editable=False)
+    EMAIL_RANGDOM_CHARS = ascii_lowercase + ascii_uppercase + digits
 
     class Meta:
         verbose_name = "Link"
@@ -133,12 +135,20 @@ class Link(models.Model):
     def __str__(self):
         return self.short_link
 
-    # def get_short_code(self, length=7):
-    #     LINK_CHARS = ascii_lowercase + ascii_uppercase + digits
-    #     chars_len = len(LINK_CHARS) - 1
-    #     return "".join(LINK_CHARS[randint(0, chars_len)] for i in range(length))
+    @classmethod
+    def create_short_link(cls, original_link):
+        short_id = str(uuid.uuid4())[:3]
+        short_link = f"https://foodgram.example.org/s/{short_id}"
+        return cls.objects.create(original_link=original_link, short_link=short_link)
 
-    # def save(self, *args, **kwargs):
-    #     if not self.pk:
-    #         self.short_code = self.generate_short_code()
-    #     return super().save(*args, **kwargs)
+    # def __new__(cls, *args):
+    #     length = len(cls.EMAIL_RANGDOM_CHARS) - 1
+    #     short_code = "".join(
+    #         cls.EMAIL_RANGDOM_CHARS[randint(0, length)] for _ in range(4)
+    #     )
+    #     short_link = (
+    #         # f"https://foodgram.example.org/s/{slugify(uuid.uuid4().hex)[:6]}"
+    #         f"https://foodgram.example.org/s/{short_code}"
+    #     )
+    #     setattr(cls, "short_link", short_link)
+    #     return super().__new__(cls, *args)

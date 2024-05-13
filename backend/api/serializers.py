@@ -78,6 +78,7 @@ class CustomUserProfileSerializer(DjoserMeUS):
 
 
 class SubscribeSerializer(serializers.ModelSerializer):
+
     recipes_count = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
@@ -105,7 +106,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
         recipes_limit = request.query_params.get("recipes_limit")
         if recipes_limit:
             recipes = recipes[: int(recipes_limit)]
-        serializer = FavoritesShoppingCartSerializer(recipes, many=True, read_only=True)
+        serializer = RecipeShortSerializer(recipes, many=True, read_only=True)
         return serializer.data
 
     def get_is_subscribed(self, obj: User):
@@ -115,12 +116,17 @@ class SubscribeSerializer(serializers.ModelSerializer):
         return Subscription.objects.filter(user=user, following=obj).exists()
 
     def validate(self, data):
+        following_id = (
+            self.context.get("request").parser_context.get("kwargs").get("id")
+        )
+        following = get_object_or_404(User, id=following_id)
         user = self.context.get("request").user
-        following = data.get("following")
+        if user.follower.filter(following=following_id).exists():
+            raise serializers.ValidationError(detail="Подписка уже существует")
         if user == following:
-            raise serializers.ValidationError("Нельзя подписываться насамого себя.")
-        if Subscription.objects.filter(user=user, following=following).exists():
-            raise serializers.ValidationError("Подписка уже существует.")
+            raise serializers.ValidationError(
+                detail="Нельзя подписаться на самого себя"
+            )
         return data
 
 
@@ -263,7 +269,6 @@ class RecipeCreateUpdateDeleteSerializer(serializers.ModelSerializer):
         return obj
 
     def create(self, validated_data):
-        # validated_data["author"] = self.context["request"].user
         tags_data = validated_data.pop("tags")
         ingredients_data = validated_data.pop("ingredients")
         recipe = Recipe.objects.create(**validated_data)
@@ -283,37 +288,68 @@ class RecipeCreateUpdateDeleteSerializer(serializers.ModelSerializer):
         return instance
 
 
-class FavoritesShoppingCartSerializer(serializers.ModelSerializer):
-    image = Base64ImageField()
+class RecipeShortSerializer(serializers.ModelSerializer):
+    """Сериализатор полей избранных рецептов и покупок"""
 
     class Meta:
         model = Recipe
         fields = ("id", "name", "image", "cooking_time")
 
+
+class FavoritesSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Favorite
+        fields = (
+            "user",
+            "recipe",
+        )
+
+    def to_representation(self, instance):
+        return RecipeShortSerializer(
+            instance.recipe, context={"request": self.context.get("request")}
+        ).data
+
     def validate(self, data):
-        user = self.context.get("request").user
         recipe = data.get("recipe")
-        if ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
-            raise serializers.ValidationError("Рецепт уже добавлен.")
-        if Favorite.objects.filter(user=user, recipe=recipe).exists():
-            raise serializers.ValidationError("Рецепт уже добавлен.")
+        # if not Recipe.objects.filter(id=recipe).exists():
+        #     raise serializers.ValidationError("Рецепт Не существует.")
+        user = data.get("user")
+        if user.favorites.filter(recipe=recipe).exists():
+            raise serializers.ValidationError("Рецепт уже добавлен в избранное.")
+        return data
+
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ShoppingCart
+        fields = (
+            "user",
+            "recipe",
+        )
+
+    def to_representation(self, instance):
+        return RecipeShortSerializer(
+            instance.recipe, context={"request": self.context.get("request")}
+        ).data
+
+    def validate(self, data):
+        recipe = data.get("recipe")
+        # if not Recipe.objects.filter(id=recipe).exists():
+        #     raise serializers.ValidationError("Рецепт Не существует.")
+        user = data.get("user")
+        if user.shopping_cart.filter(recipe=recipe).exists():
+            raise serializers.ValidationError("Рецепт уже добавлен в список.")
         return data
 
 
 class ShortLinkSerializer(serializers.ModelSerializer):
-    short_code = serializers.SerializerMethodField()
 
     class Meta:
         model = Link
-        fields = ("short_code",)
+        fields = ("short_link",)
 
-    def get_short_code(self, obj: Link):
-        if not obj.short_link:
-            LINK_CHARS = ascii_lowercase + ascii_uppercase + digits
-            chars_len = len(LINK_CHARS) - 1
-            short_code = "".join(LINK_CHARS[randint(0, chars_len)] for i in range(7))
-            # short_url = self.request.build_absolute_uri("/") + short_code
-            short_url = short_code
-            # Link.objects.get_or_create(original_link= ??, short_link=short_url)
-            return
-        return short_url
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        return {"short-link": representation["short_link"]}
