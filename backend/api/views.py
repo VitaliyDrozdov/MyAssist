@@ -57,7 +57,10 @@ class UserViewSet(DjoserUserViewset):
             Subscription.objects.create(user=user, following=following)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "DELETE":
-            Subscription.objects.filter(following=following, user=user).delete()
+            cur_sub = Subscription.objects.filter(following=following, user=user)
+            if not cur_sub.exists():
+                return Response(status=HTTP_400_BAD_REQUEST)
+            cur_sub.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -137,8 +140,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             recipe = get_object_or_404(Recipe, id=pk)
         except Http404:
             return Response(status=HTTP_400_BAD_REQUEST)
-        # except Recipe.DoesNotExist:
-        #     return Response(status=HTTP_400_BAD_REQUEST)
         if request.method == "POST":
             serializer = FavoritesSerializer(
                 data={"user": request.user.id, "recipe": recipe.id},
@@ -148,20 +149,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "DELETE":
-            # try:
-            #     Favorite.objects.filter(recipe=recipe, user=request.user).delete()
-            # except Favorite.DoesNotExist:
-            Favorite.objects.filter(recipe=recipe, user=request.user).delete()
+            cur_recipe = request.user.favorites.filter(recipe=recipe, user=request.user)
+            if not cur_recipe.exists():
+                return Response(status=HTTP_400_BAD_REQUEST)
+            cur_recipe.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["post", "delete"], url_path="shopping_cart")
     def shopping_cart(self, request, pk: int):
-        try:
-            recipe = get_object_or_404(Recipe, id=pk)
-        except Http404:
-            return Response(status=HTTP_400_BAD_REQUEST)
-        # except Recipe.DoesNotExist:
-        #     return Response(status=HTTP_400_BAD_REQUEST)
+        recipe = get_object_or_404(Recipe, id=pk)
+        # try:
+        #     recipe = get_object_or_404(Recipe, id=pk)
+        # except Http404:
+        # return Response(status=HTTP_400_BAD_REQUEST)
         if request.method == "POST":
             serializer = ShoppingCartSerializer(
                 data={"user": request.user.id, "recipe": recipe.id},
@@ -171,11 +171,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "DELETE":
-            # try:
-            #     ShoppingCart.objects.filter(recipe=recipe, user=request.user).delete()
-            # except ShoppingCart.DoesNotExist:
-            #     return Response(status=HTTP_400_BAD_REQUEST)
-            ShoppingCart.objects.filter(recipe=recipe, user=request.user).delete()
+            cur_recipe = request.user.shopping_cart.filter(
+                recipe=recipe, user=request.user
+            )
+            if not cur_recipe.exists():
+                return Response(status=HTTP_400_BAD_REQUEST)
+            cur_recipe.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=["get"], url_path="download_shopping_cart")
