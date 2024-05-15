@@ -118,7 +118,6 @@ jobs:
         username: ${{ secrets.USER }}
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
-        source: "docker-compose.production.yml"
         source: "infra/docker-compose.production.yml"
         target: "foodgram"
         strip_components: 1
