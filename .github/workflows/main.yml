@@ -119,7 +119,9 @@ jobs:
         key: ${{ secrets.SSH_KEY }}
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         source: "docker-compose.production.yml"
+        source: "infra/docker-compose.production.yml"
         target: "foodgram"
+        strip_components: 1
     - name: Executing remote ssh commands to deploy
       uses: appleboy/ssh-action@master
       with:
@@ -129,12 +131,9 @@ jobs:
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         script: |
           cd foodgram
-          # Выполняет pull образов с Docker Hub ()
           # sudo docker compose -f docker-compose.production.yml pull
-          # Перезапускает все контейнеры в Docker Compose
           sudo docker compose -f docker-compose.production.yml down
           sudo docker compose -f docker-compose.production.yml up -d
-          # Выполняет миграции и сбор статики
           sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
           sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --no-input
   send_message:
