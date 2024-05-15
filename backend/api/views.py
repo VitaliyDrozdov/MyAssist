@@ -26,7 +26,7 @@ from api.serializers import (
     SubscribeSerializer,
     TagSerializer,
 )
-from recipe.models import Favorite, Ingredient, Link, Recipe, ShoppingCart, Tag
+from recipe.models import Ingredient, Link, Recipe, Tag
 from users.models import Subscription
 
 User = get_user_model()

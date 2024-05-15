@@ -1,5 +1,4 @@
 import uuid
-from random import choice, randint
 from string import ascii_lowercase, ascii_uppercase, digits
 
 from django.contrib.auth import get_user_model
