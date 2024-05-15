@@ -31,7 +31,7 @@ services:
     container_name: nginx
     build: .
     ports:
-      - "8000:80"
+      - "9000:80"
     volumes:
       - static:/staticfiles/
       - media:/media/
