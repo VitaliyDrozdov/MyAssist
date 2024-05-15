@@ -1,25 +1,24 @@
 import base64
 from random import randint
-from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
-from django.core.files.base import ContentFile
-from djoser.serializers import (
-    UserCreateSerializer as DjoserCreateUS,
-    UserSerializer as DjoserMeUS,
-)
-from rest_framework import serializers
-from recipe.models import (
-    Ingredient,
-    Tag,
-    Recipe,
-    RecipeIngredient,
-    Link,
-    ShoppingCart,
-    Favorite,
-)
-from users.models import Subscription
 from string import ascii_lowercase, ascii_uppercase, digits
 
+from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
+from django.shortcuts import get_object_or_404
+from djoser.serializers import UserCreateSerializer as DjoserCreateUS
+from djoser.serializers import UserSerializer as DjoserMeUS
+from rest_framework import serializers
+
+from recipe.models import (
+    Favorite,
+    Ingredient,
+    Link,
+    Recipe,
+    RecipeIngredient,
+    ShoppingCart,
+    Tag,
+)
+from users.models import Subscription
 
 User = get_user_model()
 
@@ -316,6 +315,24 @@ class FavoritesSerializer(serializers.ModelSerializer):
         if user.favorites.filter(recipe=recipe).exists():
             raise serializers.ValidationError("Рецепт уже добавлен в избранное.")
         return data
+
+    # def favorite(self):
+    #     user = self.context["request"].user
+    #     recipe = self.context["recipe"]
+    #     if user.favorites.filter(recipe=recipe).exists():
+    #         raise serializers.ValidationError("Рецепт уже добавлен в избранное.")
+    #     self.save()
+
+    # def unfavorite(self):
+    #     user = self.context["request"].user
+    #     recipe = self.context["recipe"]
+    #     favorite = user.favorites.filter(recipe=recipe).first()
+    #     if favorite:
+    #         favorite.delete()
+    #     else:
+    #         raise serializers.ValidationError(
+    #             "Рецепт не найден в избранном пользователя."
+    #         )
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):

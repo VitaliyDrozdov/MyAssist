@@ -1,36 +1,33 @@
-from django.shortcuts import redirect
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
-from djoser.views import UserViewSet as DjoserUserViewset
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework import viewsets
+from django.db.models import Sum
+from django.http import Http404, HttpResponse
+from django.shortcuts import get_object_or_404, redirect
 from django_filters.rest_framework import DjangoFilterBackend
+from djoser.views import UserViewSet as DjoserUserViewset
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.status import HTTP_400_BAD_REQUEST
+
+from api.filters import IngredientFilter, RecipeFilter
+from api.pagination import LimitPagination
+from api.permissions import IsAuthorAdminOrReadOnly
 from api.serializers import (
-    IngredientSerializer,
-    TagSerializer,
-    RecipeSerializer,
-    RecipeCreateUpdateDeleteSerializer,
+    AvatarSerializer,
+    CustomUserProfileSerializer,
     FavoritesSerializer,
+    IngredientSerializer,
+    RecipeCreateUpdateDeleteSerializer,
     RecipeIngredient,
+    RecipeSerializer,
+    ShoppingCartSerializer,
     ShortLinkSerializer,
     SubscribeSerializer,
-    CustomUserProfileSerializer,
-    AvatarSerializer,
-    ShoppingCartSerializer,
+    TagSerializer,
 )
-from recipe.models import Ingredient, Tag, Recipe, Favorite, ShoppingCart, Link
-from api.pagination import LimitPagination
-from rest_framework.permissions import SAFE_METHODS
-from rest_framework import status
-from api.filters import RecipeFilter, IngredientFilter
-from django.db.models import Sum
-from django.http import HttpResponse
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from api.permissions import IsAuthorAdminOrReadOnly
+from recipe.models import Favorite, Ingredient, Link, Recipe, ShoppingCart, Tag
 from users.models import Subscription
-from rest_framework.status import HTTP_400_BAD_REQUEST
-from django.http import Http404
 
 User = get_user_model()
 

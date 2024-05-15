@@ -1,13 +1,13 @@
 from django.contrib import admin
-from recipe.models import (
-    Recipe,
-    Favorite,
-    ShoppingCart,
-    Ingredient,
-    Tag,
-    RecipeIngredient,
-)
 
+from recipe.models import (
+    Favorite,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    ShoppingCart,
+    Tag,
+)
 
 admin.site.empty_value_display = "Null"
 
