@@ -1,14 +1,11 @@
 import base64
-from random import randint
-from string import ascii_lowercase, ascii_uppercase, digits
 
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
-from django.shortcuts import get_object_or_404
-from djoser.serializers import UserCreateSerializer as DjoserCreateUS
-from djoser.serializers import UserSerializer as DjoserMeUS
+
 from rest_framework import serializers
 from rest_framework.reverse import reverse
+
 
 from recipe.models import (
     Favorite,
@@ -19,7 +16,10 @@ from recipe.models import (
     ShoppingCart,
     Tag,
 )
-from users.models import Subscription
+from api.users.serializers_users import (
+    CustomUserProfileSerializer,
+    CustomUserCreateSerializer,
+)
 
 User = get_user_model()
 
@@ -32,102 +32,6 @@ class Base64ImageField(serializers.ImageField):
             data = ContentFile(base64.b64decode(imgstr), name="temp." + ext)
 
         return super().to_internal_value(data)
-
-
-class AvatarSerializer(serializers.ModelSerializer):
-    avatar = Base64ImageField()
-
-    class Meta:
-        model = User
-        fields = ("avatar",)
-
-    def validate(self, data):
-        avatar = data.get("avatar", None)
-        if not avatar:
-            raise serializers.ValidationError("Необходимо прикрепить аватар.")
-        return data
-
-
-class CustomUserCreateSerializer(DjoserCreateUS):
-    class Meta:
-        model = User
-        fields = ("email", "id", "username", "first_name", "last_name", "password")
-
-
-class CustomUserProfileSerializer(DjoserMeUS):
-    is_subscribed = serializers.SerializerMethodField()
-    avatar = Base64ImageField()
-
-    class Meta:
-        model = User
-        fields = (
-            "email",
-            "id",
-            "username",
-            "first_name",
-            "last_name",
-            "is_subscribed",
-            "avatar",
-        )
-
-    def get_is_subscribed(self, obj: User):
-        user = self.context.get("request").user
-        if user.is_anonymous or obj == user:
-            return False
-        return Subscription.objects.filter(user=user, following=obj).exists()
-
-
-class SubscribeSerializer(serializers.ModelSerializer):
-
-    recipes_count = serializers.SerializerMethodField()
-    recipes = serializers.SerializerMethodField()
-    is_subscribed = serializers.SerializerMethodField()
-
-    class Meta(CustomUserProfileSerializer.Meta):
-        fields = (
-            "email",
-            "id",
-            "username",
-            "first_name",
-            "last_name",
-            "is_subscribed",
-            "recipes",
-            "recipes_count",
-            "avatar",
-        )
-        read_only_fields = ("email", "username", "first_name", "last_name", "avatar")
-
-    def get_recipes_count(self, obj: Recipe):
-        return obj.recipes.count()
-
-    def get_recipes(self, obj: Recipe):
-        request = self.context.get("request")
-        recipes = obj.recipes.all()
-        recipes_limit = request.query_params.get("recipes_limit")
-        if recipes_limit:
-            recipes = recipes[: int(recipes_limit)]
-        serializer = RecipeShortSerializer(recipes, many=True, read_only=True)
-        return serializer.data
-
-    def get_is_subscribed(self, obj: User):
-        user = self.context.get("request").user
-        if user.is_anonymous or obj == user:
-            return False
-        return Subscription.objects.filter(user=user, following=obj).exists()
-
-    def validate(self, data):
-        following_id = (
-            self.context.get("request").parser_context.get("kwargs").get("id")
-        )
-        following = get_object_or_404(User, id=following_id)
-        user = self.context.get("request").user
-        if user.follower.filter(following=following_id).exists():
-            raise serializers.ValidationError(detail="Подписка уже существует")
-        if user == following:
-            raise serializers.ValidationError(
-                detail="Нельзя подписаться на самого себя"
-            )
-        return data
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -152,6 +56,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
+
     tags = TagSerializer(many=True)
     ingredients = serializers.SerializerMethodField()
     image = Base64ImageField()
@@ -201,6 +106,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeCreateUpdateDeleteSerializer(serializers.ModelSerializer):
+
     tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True)
     ingredients = RecipeIngredientSerializer(many=True)
     image = Base64ImageField()
@@ -230,7 +136,9 @@ class RecipeCreateUpdateDeleteSerializer(serializers.ModelSerializer):
             if not Ingredient.objects.filter(id=ingredient.get("id")).exists():
                 raise serializers.ValidationError(f"Ингредиент не существует.")
             if not type(amount := ingredient.get("amount", 0)) is int:
-                raise serializers.ValidationError(f"Количество должно быть числом.")
+                raise serializers.ValidationError(
+                    f"Количество должно быть положительным числом."
+                )
             if amount <= 0:
                 raise serializers.ValidationError(
                     f"Количество должно быть больше нуля."
@@ -334,8 +242,6 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         recipe = data.get("recipe")
-        # if not Recipe.objects.filter(id=recipe).exists():
-        #     raise serializers.ValidationError("Рецепт Не существует.")
         user = data.get("user")
         if user.shopping_cart.filter(recipe=recipe).exists():
             raise serializers.ValidationError("Рецепт уже добавлен в список.")
@@ -352,7 +258,7 @@ class ShortLinkSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context.get("request")
         pk = self.initial_data.get("pk")
-        recipe_detail_url = reverse("recipes-detail", args=[pk]).replace('api/', '')
+        recipe_detail_url = reverse("recipes-detail", args=[pk]).replace("api/", "")
         original_link = f"http://{request.META['HTTP_HOST']}{recipe_detail_url}"
         link, _ = Link.objects.get_or_create(
             original_link=original_link, **validated_data
@@ -361,9 +267,3 @@ class ShortLinkSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         return {"short-link": instance.short_link}
-
-    # def create_short_link(self, obj):
-    #     request = self.context.get("request")
-    #     return request.build_aboslute_uri(
-    #         reverse("redirect-to-recipe", args=[obj.short_code])
-    #     )

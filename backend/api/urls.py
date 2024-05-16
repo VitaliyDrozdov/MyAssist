@@ -5,8 +5,8 @@ from api.views import (
     IngredientListDetailViewSet,
     RecipeViewSet,
     TagViewSet,
-    UserViewSet,
 )
+from api.users.views_users import UserViewSet
 
 router_v1 = routers.DefaultRouter()
 router_v1.register("users", UserViewSet, basename="users")
