@@ -1,4 +1,6 @@
 import base64
+from random import randint
+from string import ascii_lowercase, ascii_uppercase, digits
 
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
@@ -6,6 +8,7 @@ from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer as DjoserCreateUS
 from djoser.serializers import UserSerializer as DjoserMeUS
 from rest_framework import serializers
+from rest_framework.reverse import reverse
 
 from recipe.models import (
     Favorite,
@@ -314,24 +317,6 @@ class FavoritesSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Рецепт уже добавлен в избранное.")
         return data
 
-    # def favorite(self):
-    #     user = self.context["request"].user
-    #     recipe = self.context["recipe"]
-    #     if user.favorites.filter(recipe=recipe).exists():
-    #         raise serializers.ValidationError("Рецепт уже добавлен в избранное.")
-    #     self.save()
-
-    # def unfavorite(self):
-    #     user = self.context["request"].user
-    #     recipe = self.context["recipe"]
-    #     favorite = user.favorites.filter(recipe=recipe).first()
-    #     if favorite:
-    #         favorite.delete()
-    #     else:
-    #         raise serializers.ValidationError(
-    #             "Рецепт не найден в избранном пользователя."
-    #         )
-
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
 
@@ -361,8 +346,24 @@ class ShortLinkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Link
-        fields = ("short_link",)
+        fields = ("original_link", "short_link", "short_code")
+        extra_kwargs = {"short_code": {"write_only": True}}
+
+    def create(self, validated_data):
+        request = self.context.get("request")
+        pk = self.initial_data.get("pk")
+        recipe_detail_url = reverse("recipes-detail", args=[pk]).replace('api/', '')
+        original_link = f"http://{request.META['HTTP_HOST']}{recipe_detail_url}"
+        link, _ = Link.objects.get_or_create(
+            original_link=original_link, **validated_data
+        )
+        return link
 
     def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        return {"short-link": representation["short_link"]}
+        return {"short-link": instance.short_link}
+
+    # def create_short_link(self, obj):
+    #     request = self.context.get("request")
+    #     return request.build_aboslute_uri(
+    #         reverse("redirect-to-recipe", args=[obj.short_code])
+    #     )

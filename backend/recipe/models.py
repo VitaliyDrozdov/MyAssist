@@ -1,4 +1,4 @@
-import uuid
+from random import randint
 from string import ascii_lowercase, ascii_uppercase, digits
 
 from django.contrib.auth import get_user_model
@@ -123,9 +123,20 @@ class ShoppingCart(models.Model):
         return "Список покупок"
 
 
+# def create_short_code(cls):
+#     length = len(cls.EMAIL_RANGDOM_CHARS) - 1
+
+#     # short_id = str(uuid.uuid4())[:3]
+#     short_code = "".join(cls.EMAIL_RANGDOM_CHARS[randint(0, length)] for _ in range(4))
+#     # short_link = f"https://foodgram.example.org/s/{short_code}"
+#     # return cls.objects.create(original_link=original_link, short_link=short_link)
+#     return short_code
+
+
 class Link(models.Model):
-    original_link = models.URLField()
-    short_link = models.SlugField(max_length=6, unique=True, editable=False)
+
+    original_link = models.URLField(blank=True)
+    short_code = models.SlugField(max_length=5, unique=True, blank=True)
     EMAIL_RANGDOM_CHARS = ascii_lowercase + ascii_uppercase + digits
 
     class Meta:
@@ -136,10 +147,21 @@ class Link(models.Model):
         return self.short_link
 
     @classmethod
-    def create_short_link(cls, original_link):
-        short_id = str(uuid.uuid4())[:3]
-        short_link = f"https://foodgram.example.org/s/{short_id}"
-        return cls.objects.create(original_link=original_link, short_link=short_link)
+    def create_short_code(cls):
+        length = len(cls.EMAIL_RANGDOM_CHARS) - 1
+        short_code = "".join(
+            cls.EMAIL_RANGDOM_CHARS[randint(0, length)] for _ in range(4)
+        )
+        return short_code
+
+    def save(self, *args, **kwargs):
+        if not self.short_code:
+            self.short_code = self.create_short_code()
+        super().save(*args, **kwargs)
+
+    @property
+    def short_link(self):
+        return f"https://foodgram.example.org/s/{self.short_code}"
 
     # def __new__(cls, *args):
     #     length = len(cls.EMAIL_RANGDOM_CHARS) - 1

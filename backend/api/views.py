@@ -1,14 +1,16 @@
 from django.contrib.auth import get_user_model
+
 from django.db.models import Sum
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewset
 from rest_framework import status, viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
+
 
 from api.filters import IngredientFilter, RecipeFilter
 from api.pagination import LimitPagination
@@ -198,14 +200,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["get"], url_path="get-link")
     def get_short_link(self, request, pk: int):
-        # recipe = get_object_or_404(Recipe, id=pk)
-        recipe_url = request.build_absolute_uri(f"/api/recipes/{pk}/")
-        link = Link.create_short_link(recipe_url)
-        # link = Link(recipe_url)
-        serializer = ShortLinkSerializer(link)
+        # recipe_url = request.build_absolute_uri(f"/recipes/{pk}/")
+        serializer = ShortLinkSerializer(data={"pk": pk}, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-def redirect_to_recipe(request, short_link):
-    link = get_object_or_404(Link, short_link=short_link)
+@api_view(["GET"])
+def redirect_to_recipe(request, short_code):
+    link = get_object_or_404(Link, short_code=short_code)
+    # serializer = ShortLinkSerializer(
+    #     data={"short_link": link.short_link}, context={"request": request}
+    # )
+    # return Response(serializer.data)
     return redirect(link.original_link)
