@@ -48,9 +48,12 @@ class Recipe(models.Model):
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="recipes", db_index=True
     )
-    name = models.CharField(verbose_name="Наименование рецепта", max_length=256)
+    name = models.CharField(
+        verbose_name="Наименование рецепта",
+        max_length=256
+    )
     image = models.ImageField(
-        verbose_name="Изображение", upload_to="recipes", null=True, blank=True
+        verbose_name="Изображение", upload_to="recipes", null=True, blank=True,
     )
     text = models.TextField(verbose_name="Описание")
     ingredients = models.ManyToManyField(
@@ -59,7 +62,11 @@ class Recipe(models.Model):
         through="RecipeIngredient",
         related_name="recipes",
     )
-    tags = models.ManyToManyField(verbose_name="Тэг", to=Tag, related_name="recipes")
+    tags = models.ManyToManyField(
+        verbose_name="Тэг",
+        to=Tag,
+        related_name="recipes"
+    )
     cooking_time = models.IntegerField(
         verbose_name="Время приготовления", validators=[MinValueValidator(1)]
     )
@@ -153,14 +160,3 @@ class Link(models.Model):
     def short_link(self):
         return f"https://foodgram.example.org/s/{self.short_code}"
 
-    # def __new__(cls, *args):
-    #     length = len(cls.EMAIL_RANGDOM_CHARS) - 1
-    #     short_code = "".join(
-    #         cls.EMAIL_RANGDOM_CHARS[randint(0, length)] for _ in range(4)
-    #     )
-    #     short_link = (
-    #         # f"https://foodgram.example.org/s/{slugify(uuid.uuid4().hex)[:6]}"
-    #         f"https://foodgram.example.org/s/{short_code}"
-    #     )
-    #     setattr(cls, "short_link", short_link)
-    #     return super().__new__(cls, *args)

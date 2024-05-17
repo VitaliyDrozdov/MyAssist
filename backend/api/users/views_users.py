@@ -69,7 +69,7 @@ class UserViewSet(DjoserUserViewset):
         permission_classes=(IsAuthenticated,),
     )
     def subscriptions(self, request) -> Response:
-        """Показывает всех пользователей на которых подписан текущий пользователь.
+        """Показывает всех юзеров на которых подписан текущий пользователь.
         Дополнительно показываются созданные рецепты.
         Args:
             request: Request.
@@ -85,9 +85,16 @@ class UserViewSet(DjoserUserViewset):
             )
             return self.get_paginated_response(serializer.data)
         else:
-            return Response("Подписки отсутствуют", status=HTTP_400_BAD_REQUEST)
+            return Response(
+                "Подписки отсутствуют",
+                status=HTTP_400_BAD_REQUEST
+            )
 
-    @action(detail=False, methods=["get"], permission_classes=(IsAuthenticated,))
+    @action(
+        detail=False,
+        methods=["get"],
+        permission_classes=(IsAuthenticated,)
+    )
     def me(self, request, *args, **kwargs) -> Response:
         """Переопределение методов для эндпоинта /me/."""
         return super().me(request, *args, **kwargs)
@@ -101,7 +108,11 @@ class UserViewSet(DjoserUserViewset):
     def set_avatar(self, request) -> Response:
         """Изменение аватара."""
         if request.method == "PUT" or request.method == "PATCH":
-            serializer = AvatarSerializer(request.user, data=request.data, partial=True)
+            serializer = AvatarSerializer(
+                request.user,
+                data=request.data,
+                partial=True
+            )
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)

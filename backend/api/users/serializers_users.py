@@ -48,7 +48,14 @@ class CustomUserCreateSerializer(DjoserCreateUS):
 
     class Meta:
         model = User
-        fields = ("email", "id", "username", "first_name", "last_name", "password")
+        fields = (
+            "email",
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "password"
+        )
 
 
 class CustomUserProfileSerializer(DjoserMeUS):
@@ -107,7 +114,8 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
 
 class SubscribeGetSerializer(CustomUserProfileSerializer):
-    """Сериализатор для отображения всех подписанных пользователей, их рецептов, количества рецептов."""
+    """Сериализатор для отображения всех подписанных пользователей,
+    их рецептов, количества рецептов."""
 
     recipes_count = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
@@ -124,7 +132,13 @@ class SubscribeGetSerializer(CustomUserProfileSerializer):
             "recipes_count",
             "avatar",
         )
-        read_only_fields = ("email", "username", "first_name", "last_name", "avatar")
+        read_only_fields = (
+            "email",
+            "username",
+            "first_name",
+            "last_name",
+            "avatar"
+        )
 
     def get_recipes_count(self, obj: User) -> int:
         """Подсчет количества рецептов."""

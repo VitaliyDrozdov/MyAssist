@@ -21,7 +21,10 @@ class CustomUser(AbstractUser):
     avatar = models.ImageField(
         verbose_name="Аватар", upload_to="avatars", null=True, blank=True
     )
-    is_subscribed = models.BooleanField(verbose_name="Подписка", null=True)
+    is_subscribed = models.BooleanField(
+        verbose_name="Подписка",
+        null=True
+    )
 
     class Meta:
         verbose_name = "CustomUser"
@@ -50,10 +53,12 @@ class Subscription(models.Model):
         verbose_name_plural = "Subscriptions"
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "following"], name="unique_user_following"
+                fields=["user", "following"], 
+                name="unique_user_following"
             ),
             models.CheckConstraint(
-                check=models.Q(user=models.F("user")), name="prevent_self_follow"
+                check=models.Q(user=models.F("user")),
+                name="prevent_self_follow"
             ),
         ]
 
