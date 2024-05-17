@@ -1,9 +1,12 @@
 import base64
 
+from django.db.models import QuerySet
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
+
 from djoser.serializers import UserCreateSerializer as DjoserCreateUS
 from djoser.serializers import UserSerializer as DjoserMeUS
+
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
@@ -13,6 +16,8 @@ User = get_user_model()
 
 
 class Base64ImageField(serializers.ImageField):
+    """Преобразование изображения в текстовую строку."""
+
     def to_internal_value(self, data: str):
         if isinstance(data, str) and data.startswith("data:image"):
             format, imgstr = data.split(";base64,")
@@ -23,6 +28,8 @@ class Base64ImageField(serializers.ImageField):
 
 
 class AvatarSerializer(serializers.ModelSerializer):
+    """Сериализатор для аватара."""
+
     avatar = Base64ImageField()
 
     class Meta:
@@ -37,12 +44,16 @@ class AvatarSerializer(serializers.ModelSerializer):
 
 
 class CustomUserCreateSerializer(DjoserCreateUS):
+    """Сериализатор для регистрации пользователей. Унаследован от Djoser."""
+
     class Meta:
         model = User
         fields = ("email", "id", "username", "first_name", "last_name", "password")
 
 
 class CustomUserProfileSerializer(DjoserMeUS):
+    """Сериализатор для текущего пользователя. Унаследован от Djoser."""
+
     is_subscribed = serializers.SerializerMethodField()
     avatar = Base64ImageField()
 
@@ -58,7 +69,13 @@ class CustomUserProfileSerializer(DjoserMeUS):
             "avatar",
         )
 
-    def get_is_subscribed(self, obj: User):
+    def get_is_subscribed(self, obj: User) -> bool:
+        """Проверяет статус подписки.
+        Args:
+            obj (User): исходный пользователь.
+        Returns:
+            bool: true or false.
+        """
         user = self.context.get("request").user
         if user.is_anonymous or obj == user:
             return False
@@ -66,6 +83,8 @@ class CustomUserProfileSerializer(DjoserMeUS):
 
 
 class SubscribeSerializer(serializers.ModelSerializer):
+    """Сериализатор для подписки."""
+
     class Meta:
         model = Subscription
         fields = ("user", "following")
@@ -88,6 +107,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
 
 class SubscribeGetSerializer(CustomUserProfileSerializer):
+    """Сериализатор для отображения всех подписанных пользователей, их рецептов, количества рецептов."""
 
     recipes_count = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
@@ -106,10 +126,18 @@ class SubscribeGetSerializer(CustomUserProfileSerializer):
         )
         read_only_fields = ("email", "username", "first_name", "last_name", "avatar")
 
-    def get_recipes_count(self, obj):
+    def get_recipes_count(self, obj: User) -> int:
+        """Подсчет количества рецептов."""
         return obj.recipes.count()
 
-    def get_recipes(self, obj):
+    def get_recipes(self, obj: User) -> QuerySet[dict]:
+        """Полачает список репептов пользователя.
+        Args:
+            recipe (User): исходный пользователь.
+
+        Returns:
+            QuerySet[dict]: Список рецептов пользователя.
+        """
         from api.serializers import RecipeShortSerializer
 
         request = self.context.get("request")

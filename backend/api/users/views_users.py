@@ -22,6 +22,12 @@ User = get_user_model()
 
 
 class UserViewSet(DjoserUserViewset):
+    """ViewSet для пользователей. Унаследован от Djoser.
+    Регистрация, авторизация, подписки на других пользователей,
+    список подписок, изменение аватара у пользователя.
+    Настройки Djoser переопределены в settings.py
+    """
+
     queryset = User.objects.all()
     serializer_class = CustomUserProfileSerializer
     pagination_class = LimitPagination
@@ -32,7 +38,13 @@ class UserViewSet(DjoserUserViewset):
         url_path="subscribe",
         permission_classes=(IsAuthenticated,),
     )
-    def subscribe(self, request, **kwargs):
+    def subscribe(self, request, **kwargs) -> Response:
+        """Создаёт/удалет связь между пользователями.
+        Args:
+            request: Request.
+        Returns:
+            Response: статус подписки.
+        """
         following = get_object_or_404(User, id=self.kwargs.get("id"))
         user = request.user.id
         if request.method == "POST":
@@ -56,7 +68,14 @@ class UserViewSet(DjoserUserViewset):
         url_path="subscriptions",
         permission_classes=(IsAuthenticated,),
     )
-    def subscriptions(self, request):
+    def subscriptions(self, request) -> Response:
+        """Показывает всех пользователей на которых подписан текущий пользователь.
+        Дополнительно показываются созданные рецепты.
+        Args:
+            request: Request.
+        Returns:
+            Response: список подписок.
+        """
         user = request.user
         subscriptions = User.objects.filter(following__user=user)
         if subscriptions:
@@ -69,7 +88,8 @@ class UserViewSet(DjoserUserViewset):
             return Response("Подписки отсутствуют", status=HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=["get"], permission_classes=(IsAuthenticated,))
-    def me(self, request, *args, **kwargs):
+    def me(self, request, *args, **kwargs) -> Response:
+        """Переопределение методов для эндпоинта /me/."""
         return super().me(request, *args, **kwargs)
 
     @action(
@@ -78,7 +98,8 @@ class UserViewSet(DjoserUserViewset):
         url_path="me/avatar",
         permission_classes=(IsAuthenticated,),
     )
-    def set_avatar(self, request):
+    def set_avatar(self, request) -> Response:
+        """Изменение аватара."""
         if request.method == "PUT" or request.method == "PATCH":
             serializer = AvatarSerializer(request.user, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)

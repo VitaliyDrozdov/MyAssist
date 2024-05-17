@@ -12,7 +12,6 @@ class Command(BaseCommand):
         self.import_ingredients()
 
     def import_ingredients(self):
-        # Ingredient.objects.all().delete()
         file_path = "./data/ingredients.csv"
 
         with open(file_path, "r", encoding="utf-8") as csv_file:
@@ -24,10 +23,3 @@ class Command(BaseCommand):
                     name=row[0], measurement_unit=row[1]
                 )
                 ingredient.save()
-        # with open(file_path, "r", encoding="utf-8") as imported_csv:
-        #     reader = csv.reader(imported_csv)
-        #     header = next(reader)
-        #     for row in reader:
-        #         object_dict = {key: value for key, value in zip(header, row)}
-        #         ingredient = Ingredient.objects.create(**object_dict)
-        #         ingredient.save()

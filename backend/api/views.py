@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 
 from django.db.models import Sum
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
@@ -11,7 +11,6 @@ from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_204_NO_CONTENT,
-    HTTP_404_NOT_FOUND,
 )
 
 
@@ -34,7 +33,11 @@ User = get_user_model()
 
 
 class IngredientListDetailViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = IngredientSerializer
+    """ViewSet для получение списка ингредиентов или одного ингредиента по id.
+    Возможен поиск по имени.
+    """
+
+    serializer_class: type[IngredientSerializer] = IngredientSerializer
     queryset = Ingredient.objects.all()
     filter_backends = (IngredientFilter,)
     search_fields = ("^name",)
@@ -43,11 +46,19 @@ class IngredientListDetailViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
+    """ViewSet для получение списка тэгов или одного тэга по id."""
+
     serializer_class = TagSerializer
     queryset = Tag.objects.all()
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
+    """ViewSet для рецептов.
+    Создание, редактирование, получение списка по фильтрам,
+    добавление/удаление в избранное и список покупок.
+    Отправка текстового файла со списком покупок.
+    """
+
     serializer_class = RecipeSerializer
     queryset = Recipe.objects.all()
     pagination_class = LimitPagination
@@ -63,7 +74,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeSerializer
         return RecipeCreateUpdateDeleteSerializer
 
-    def __add__recipe(self, request, pk: int, serializer_class):
+    def __add__recipe(self, request, pk: int, serializer_class) -> Response:
+        """Добавление рецептов в список покупок | избранное.
+        Args:
+            request: Request.
+            pk (int): id рецепта.
+            serializer_class (Serializer): тип сериализатора.
+        Returns:
+            Response: статус рецепта.
+        """
         try:
             recipe = get_object_or_404(Recipe, id=pk)
         except Http404:
@@ -76,7 +95,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def __delete_recipe(self, request, pk: int, related_name):
+    def __delete_recipe(self, request, pk: int, related_name: str):
+        """Удаление рецептов из списка покупок | избранного.
+        Args:
+            request: Request.
+            pk (int): id рецепта.
+            related_name (str): related_name для модели.
+        Returns:
+            Response: статус рецепта.
+        """
         recipe = get_object_or_404(Recipe, id=pk)
         cur_recipe = getattr(request.user, related_name).filter(recipe=recipe)
         if not cur_recipe.exists():
@@ -85,62 +112,40 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Response(status=HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["post", "delete"], url_path="favorite")
-    def favorite(self, request, pk: int):
+    def favorite(self, request, pk: int) -> Response:
+        """Функция обработки списка избранного. Добавление | удаление рецептов.
+        Args:
+            request: Request.
+            pk (int): id рецепта
+        Returns: статус рецепта.
+        """ """"""
         if request.method == "POST":
             return self.__add__recipe(request, pk, FavoritesSerializer)
         elif request.method == "DELETE":
             return self.__delete_recipe(request, pk, "favorites")
 
     @action(detail=True, methods=["post", "delete"], url_path="shopping_cart")
-    def shopping_cart(self, request, pk: int):
+    def shopping_cart(self, request, pk: int) -> Response:
+        """Функция обработки списка покупок. Добавление | удаление рецептов.
+        Args:
+            request: Request.
+            pk (int): id рецепта
+        Returns: статус рецепта.
+        """ """"""
         if request.method == "POST":
             return self.__add__recipe(request, pk, ShoppingCartSerializer)
         elif request.method == "DELETE":
             return self.__delete_recipe(request, pk, "shopping_cart")
 
-    # @action(detail=True, methods=["post", "delete"], url_path="favorite")
-    # def favorite(self, request, pk: int):
-    #     try:
-    #         recipe = get_object_or_404(Recipe, id=pk)
-    #     except Http404:
-    #         return Response(status=HTTP_400_BAD_REQUEST)
-    #     if request.method == "POST":
-    #         serializer = FavoritesSerializer(
-    #             data={"user": request.user.id, "recipe": recipe.id},
-    #             context={"request": request},
-    #         )
-    #         serializer.is_valid(raise_exception=True)
-    #         serializer.save()
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #     elif request.method == "DELETE":
-    #         cur_recipe = request.user.favorites.filter(recipe=recipe, user=request.user)
-    #         if not cur_recipe.exists():
-    #             return Response(status=HTTP_400_BAD_REQUEST)
-    #         cur_recipe.delete()
-    #         return Response(status=status.HTTP_204_NO_CONTENT)
-
-    # @action(detail=True, methods=["post", "delete"], url_path="shopping_cart")
-    # def shopping_cart(self, request, pk: int):
-    #     recipe = get_object_or_404(Recipe, id=pk)
-    #     if request.method == "POST":
-    #         serializer = ShoppingCartSerializer(
-    #             data={"user": request.user.id, "recipe": recipe.id},
-    #             context={"request": request},
-    #         )
-    #         serializer.is_valid(raise_exception=True)
-    #         serializer.save()
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #     elif request.method == "DELETE":
-    #         cur_recipe = request.user.shopping_cart.filter(
-    #             recipe=recipe, user=request.user
-    #         )
-    #         if not cur_recipe.exists():
-    #             return Response(status=HTTP_400_BAD_REQUEST)
-    #         cur_recipe.delete()
-    #         return Response(status=status.HTTP_204_NO_CONTENT)
-
     @action(detail=False, methods=["get"], url_path="download_shopping_cart")
-    def download_shopping_cart(self, request):
+    def download_shopping_cart(self, request) -> HttpResponse:
+        """Скачивает файл со списком покупок.
+        Считает сумму ингредиентов в рецептах.
+        Args:
+            request: Request.
+        Returns:
+            HttpResponse: файл со списком ингредиентов в нужном формате.
+        """
         user = request.user
         ingredients = (
             RecipeIngredient.objects.filter(recipe__shopping_cart__user=user)
@@ -160,7 +165,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return response
 
     @action(detail=True, methods=["get"], url_path="get-link")
-    def get_short_link(self, request, pk: int):
+    def get_short_link(self, request, pk: int) -> Response:
+        """Получает короткую ссылку для репепта.
+        Args:
+            request (_type_): Request.
+            pk (int): id репепта.
+        Returns:
+            Response: url ссылка вида s/short_code.
+        """
         serializer = ShortLinkSerializer(data={"pk": pk}, context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -168,6 +180,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 
 @api_view(["GET"])
-def redirect_to_recipe(request, short_code):
+def redirect_to_recipe(request, short_code) -> HttpResponseRedirect:
+    """При переходе по короткой ссылке перенаправляет на страницу рецепта.
+    Args:
+        request: Request.
+        short_code (str): короткий slug для репепта.
+    Returns:
+        HttpResponseRedirect: полная сслыка на репепт.
+    """
     link = get_object_or_404(Link, short_code=short_code)
     return redirect(link.original_link)

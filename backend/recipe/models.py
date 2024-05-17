@@ -10,15 +10,15 @@ User = get_user_model()
 
 
 class Ingredient(models.Model):
-    # class MeasureChoices(models.TextChoices):
-    #     GRAMM = "г", _("Граммы")
-    #     DROP = "капля", _("Капля")
-    #     PIECE = "шт.", _("Штуки")
-    #     BIGPIECE = "кусок", _("Кусок")
-    #     ML = "мл", _("Миллилитры")
-    #     TEASPOON = "ч.л.", _("Чайная ложка")
+    class MeasureChoices(models.TextChoices):
+        GRAMM = "г", _("Граммы")
+        DROP = "капля", _("Капля")
+        PIECE = "шт.", _("Штуки")
+        BIGPIECE = "кусок", _("Кусок")
+        ML = "мл", _("Миллилитры")
+        TEASPOON = "ч.л.", _("Чайная ложка")
 
-    name = models.CharField(max_length=128)
+    name = models.CharField(max_length=128, choices=MeasureChoices.choices)
     measurement_unit = models.CharField(
         max_length=64,
         verbose_name="Единицы измерения",
@@ -121,16 +121,6 @@ class ShoppingCart(models.Model):
 
     def __str__(self):
         return "Список покупок"
-
-
-# def create_short_code(cls):
-#     length = len(cls.EMAIL_RANGDOM_CHARS) - 1
-
-#     # short_id = str(uuid.uuid4())[:3]
-#     short_code = "".join(cls.EMAIL_RANGDOM_CHARS[randint(0, length)] for _ in range(4))
-#     # short_link = f"https://foodgram.example.org/s/{short_code}"
-#     # return cls.objects.create(original_link=original_link, short_link=short_link)
-#     return short_code
 
 
 class Link(models.Model):
