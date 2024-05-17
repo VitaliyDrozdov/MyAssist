@@ -171,7 +171,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["get"], url_path="get-link")
     def get_short_link(self, request, pk: int) -> Response:
-        """Получает короткую ссылку для репепта.
+        """Получение короткой ссылки для репепта.
         Args:
             request (_type_): Request.
             pk (int): id репепта.
