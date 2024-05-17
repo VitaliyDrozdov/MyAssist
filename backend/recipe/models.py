@@ -159,4 +159,3 @@ class Link(models.Model):
     @property
     def short_link(self):
         return f"https://foodgram.example.org/s/{self.short_code}"
-

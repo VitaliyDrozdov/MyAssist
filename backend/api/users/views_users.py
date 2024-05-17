@@ -56,7 +56,10 @@ class UserViewSet(DjoserUserViewset):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "DELETE":
-            cur_sub = Subscription.objects.filter(following=following, user=user)
+            cur_sub = Subscription.objects.filter(
+                following=following,
+                user=user
+            )
             if not cur_sub.exists():
                 return Response(status=HTTP_400_BAD_REQUEST)
             cur_sub.delete()

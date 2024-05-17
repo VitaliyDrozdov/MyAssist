@@ -104,7 +104,8 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         return SubscribeGetSerializer(
-            instance.following, context={"request": self.context.get("request")}
+            instance.following,
+            context={"request": self.context.get("request")}
         ).data
 
     def validate_following(self, val):

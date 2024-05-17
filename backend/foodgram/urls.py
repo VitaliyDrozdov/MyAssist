@@ -8,7 +8,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("api.urls")),
     path(
-        "s/<slug:short_code>/", redirect_to_recipe, 
+        "s/<slug:short_code>/", redirect_to_recipe,
         name="redirect-to-recipe"
     ),
 ]

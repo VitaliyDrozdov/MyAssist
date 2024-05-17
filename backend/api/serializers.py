@@ -101,7 +101,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             ingredient_data = {
                 "id": recipe_ingredient.ingredient.id,
                 "name": recipe_ingredient.ingredient.name,
-                "measurement_unit": 
+                "measurement_unit":
                     recipe_ingredient.ingredient.measurement_unit,
                 "amount": recipe_ingredient.amount,
             }
@@ -199,9 +199,9 @@ class RecipeCreateUpdateDeleteSerializer(serializers.ModelSerializer):
         """Добавлять тэги или ингредиенты к рецепту.
         Args:
             obj (Recipe): исходный рецепт.
-            tags_data (list[int], optional): список с id тэгов. 
+            tags_data (list[int], optional): список с id тэгов.
             Defaults to None.
-            ingredients_data (OrderedDict, optional): 
+            ingredients_data (OrderedDict, optional):
             Список из словарей с ингредиентами. Defaults to None.
         Returns:
             Recipe: объект рецепта.

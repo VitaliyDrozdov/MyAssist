@@ -160,7 +160,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 f' - {ingredient["amount"]}\n'
             )
         filename = f"{user.username}_shopping_list.txt"
-        response = HttpResponse(shopping_list, content_type="text/plain")
+        response = HttpResponse(
+            shopping_list,
+            content_type="text/plain"
+        )
         response["Content-Disposition"] = f"attachment; filename={filename}.txt"
         return response
 
@@ -173,7 +176,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         Returns:
             Response: url ссылка вида s/short_code.
         """
-        serializer = ShortLinkSerializer(data={"pk": pk}, context={"request": request})
+        serializer = ShortLinkSerializer(
+            data={"pk": pk},
+            context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
