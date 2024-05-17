@@ -8,16 +8,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", get_random_secret_key())
 
-# DEBUG = os.getenv("DEBUG", "False").lower() == "true"
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
 DEFAULT_ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", ",".join(DEFAULT_ALLOWED_HOSTS)).split(",")
-# INTERNAL_IPS = [
-#     "127.0.0.1",
-# ]
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
 
-# CSRF_TRUSTED_ORIGINS = ["https://foodgramdr.hopto.org"]
+CSRF_TRUSTED_ORIGINS = ["https://foodgramdr.hopto.org"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -33,7 +32,7 @@ INSTALLED_APPS = [
     "users.apps.UsersConfig",
     "recipe.apps.RecipeConfig",
     "api",
-    # "debug_toolbar",
+    "debug_toolbar",
 ]
 
 MIDDLEWARE = [
@@ -73,14 +72,14 @@ AUTH_USER_MODEL = "users.CustomUser"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-        #     "ENGINE": "django.db.backends.postgresql",
-        #     "NAME": os.getenv("POSTGRES_DB", "django"),
-        #     "USER": os.getenv("POSTGRES_USER", "django"),
-        #     "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
-        #     "HOST": os.getenv("DB_HOST", ""),
-        #     "PORT": os.getenv("DB_PORT", 5432),
+        # "ENGINE": "django.db.backends.sqlite3",
+        # "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("POSTGRES_DB", "django"),
+        "USER": os.getenv("POSTGRES_USER", "django"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
+        "HOST": os.getenv("DB_HOST", ""),
+        "PORT": os.getenv("DB_PORT", 5432),
     }
 }
 
