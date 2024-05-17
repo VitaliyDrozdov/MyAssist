@@ -164,7 +164,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             shopping_list,
             content_type="text/plain"
         )
-        response["Content-Disposition"] = f"attachment; filename={filename}.txt"
+        response["Content-Disposition"] = (
+            f"attachment; filename={filename}.txt"
+        )
         return response
 
     @action(detail=True, methods=["get"], url_path="get-link")
