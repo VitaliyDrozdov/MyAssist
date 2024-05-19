@@ -19,7 +19,7 @@ from recipe.models import (
     ShoppingCart,
     Tag,
 )
-from api.users.serializers_users import CustomUserProfileSerializer
+from api.users.serializers import CustomUserProfileSerializer
 
 User = get_user_model()
 
@@ -101,8 +101,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             ingredient_data = {
                 "id": recipe_ingredient.ingredient.id,
                 "name": recipe_ingredient.ingredient.name,
-                "measurement_unit":
-                    recipe_ingredient.ingredient.measurement_unit,
+                "measurement_unit": recipe_ingredient.ingredient.measurement_unit,
                 "amount": recipe_ingredient.amount,
             }
             ingredients_data.append(ingredient_data)
@@ -136,10 +135,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 class RecipeCreateUpdateDeleteSerializer(serializers.ModelSerializer):
     """Сериализатор страницы рецепта."""
 
-    tags = serializers.PrimaryKeyRelatedField(
-        queryset=Tag.objects.all(),
-        many=True
-    )
+    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True)
     ingredients = RecipeIngredientSerializer(many=True)
     image = Base64ImageField()
     author = CustomUserProfileSerializer(read_only=True)
@@ -172,9 +168,7 @@ class RecipeCreateUpdateDeleteSerializer(serializers.ModelSerializer):
                     "Количество должно быть положительным числом."
                 )
             if amount <= 0:
-                raise serializers.ValidationError(
-                    "Количество должно быть больше нуля."
-                )
+                raise serializers.ValidationError("Количество должно быть больше нуля.")
             if (cur_id := ingredient.get("id")) in ingr_ids:
                 raise serializers.ValidationError("Ингредиент уже добавлен.")
             ingr_ids.add(cur_id)
@@ -216,9 +210,7 @@ class RecipeCreateUpdateDeleteSerializer(serializers.ModelSerializer):
             for ingredient_data in ingredients_data:
                 RecipeIngredient.objects.create(
                     recipe=obj,
-                    ingredient=Ingredient.objects.get(
-                        id=ingredient_data["id"]
-                    ),
+                    ingredient=Ingredient.objects.get(id=ingredient_data["id"]),
                     amount=ingredient_data["amount"],
                 )
         else:
@@ -271,9 +263,7 @@ class FavoritesSerializer(serializers.ModelSerializer):
         recipe = data.get("recipe")
         user = data.get("user")
         if user.favorites.filter(recipe=recipe).exists():
-            raise serializers.ValidationError(
-                "Рецепт уже добавлен в избранное."
-            )
+            raise serializers.ValidationError("Рецепт уже добавлен в избранное.")
         return data
 
 
@@ -311,14 +301,8 @@ class ShortLinkSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context.get("request")
         pk = self.initial_data.get("pk")
-        recipe_detail_url = reverse(
-            "recipes-detail",
-            args=[pk]
-        ).replace("api/", "")
-        original_link = (
-            f"http://{request.META['HTTP_HOST']}"
-            f"{recipe_detail_url}"
-        )
+        recipe_detail_url = reverse("recipes-detail", args=[pk]).replace("api/", "")
+        original_link = f"http://{request.META['HTTP_HOST']}" f"{recipe_detail_url}"
         link, _ = Link.objects.get_or_create(
             original_link=original_link, **validated_data
         )

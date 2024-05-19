@@ -19,8 +19,8 @@ class RecipeAdmin(admin.ModelAdmin):
         "name",
         "image",
         "text",
-        "is_favorited",
-        "is_in_shopping_cart",
+        # "is_favorited",
+        # "is_in_shopping_cart",
         "pub_date",
         "get_tag",
         "cnt_favoties",
@@ -29,8 +29,8 @@ class RecipeAdmin(admin.ModelAdmin):
         "name",
         "image",
         "text",
-        "is_favorited",
-        "is_in_shopping_cart",
+        # "is_favorited",
+        # "is_in_shopping_cart",
     )
     list_display_links = ("author",)
     search_fields = ("author", "name")
@@ -68,6 +68,5 @@ class TagAdmin(admin.ModelAdmin):
 
 @admin.register(RecipeIngredient)
 class RecipeIngredientAdmin(admin.ModelAdmin):
-    list_display = ("recipe", "ingredient", "amount")
-    list_editable = ("amount",)
+    list_display = ("recipe", "ingredient")
     list_display_links = ("recipe", "ingredient")

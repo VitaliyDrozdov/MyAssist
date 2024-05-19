@@ -10,7 +10,7 @@ from rest_framework.status import HTTP_400_BAD_REQUEST
 
 
 from api.pagination import LimitPagination
-from api.users.serializers_users import (
+from api.users.serializers import (
     CustomUserProfileSerializer,
     SubscribeSerializer,
     SubscribeGetSerializer,
@@ -56,10 +56,7 @@ class UserViewSet(DjoserUserViewset):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "DELETE":
-            cur_sub = Subscription.objects.filter(
-                following=following,
-                user=user
-            )
+            cur_sub = Subscription.objects.filter(following=following, user=user)
             if not cur_sub.exists():
                 return Response(status=HTTP_400_BAD_REQUEST)
             cur_sub.delete()
@@ -88,16 +85,9 @@ class UserViewSet(DjoserUserViewset):
             )
             return self.get_paginated_response(serializer.data)
         else:
-            return Response(
-                "Подписки отсутствуют",
-                status=HTTP_400_BAD_REQUEST
-            )
+            return Response("Подписки отсутствуют", status=HTTP_400_BAD_REQUEST)
 
-    @action(
-        detail=False,
-        methods=["get"],
-        permission_classes=(IsAuthenticated,)
-    )
+    @action(detail=False, methods=["get"], permission_classes=(IsAuthenticated,))
     def me(self, request, *args, **kwargs) -> Response:
         """Переопределение методов для эндпоинта /me/."""
         return super().me(request, *args, **kwargs)
@@ -111,11 +101,7 @@ class UserViewSet(DjoserUserViewset):
     def set_avatar(self, request) -> Response:
         """Изменение аватара."""
         if request.method == "PUT" or request.method == "PATCH":
-            serializer = AvatarSerializer(
-                request.user,
-                data=request.data,
-                partial=True
-            )
+            serializer = AvatarSerializer(request.user, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)

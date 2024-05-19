@@ -2,6 +2,9 @@ import os
 from pathlib import Path
 
 from django.core.management.utils import get_random_secret_key
+from dotenv import load_dotenv
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -10,8 +13,13 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", get_random_secret_key())
 
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
-DEFAULT_ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", ",".join(DEFAULT_ALLOWED_HOSTS)).split(",")
+DEFAULT_ALLOWED_HOSTS = "localhost, 127.0.0.1"
+ALLOWED_HOSTS = (
+    os.getenv("ALLOWED_HOSTS", DEFAULT_ALLOWED_HOSTS)
+    .strip()
+    .replace(" ", "")
+    .split(",")
+)
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
@@ -70,18 +78,26 @@ WSGI_APPLICATION = "foodgram.wsgi.application"
 AUTH_USER_MODEL = "users.CustomUser"
 
 
-DATABASES = {
-    "default": {
-        # "ENGINE": "django.db.backends.sqlite3",
-        # "NAME": BASE_DIR / "db.sqlite3",
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB", "django"),
-        "USER": os.getenv("POSTGRES_USER", "django"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
-        "HOST": os.getenv("DB_HOST", ""),
-        "PORT": os.getenv("DB_PORT", 5432),
+USE_SQLITE = os.getenv("USE_SQLITE", "False").lower() == "true"
+
+if USE_SQLITE:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("POSTGRES_DB", "django"),
+            "USER": os.getenv("POSTGRES_USER", "django"),
+            "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
+            "HOST": os.getenv("DB_HOST", ""),
+            "PORT": os.getenv("DB_PORT", 5432),
+        }
+    }
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -110,7 +126,6 @@ USE_TZ = True
 
 
 STATIC_URL = "/static/"
-# STATICFILES_DIRS = (BASE_DIR / "static/",)
 STATIC_ROOT = BASE_DIR / "backend_static/static"
 
 MEDIA_URL = "/media/"
@@ -132,8 +147,8 @@ REST_FRAMEWORK = {
 DJOSER = {
     "LOGIN_FIELD": "email",
     "SERIALIZERS": {
-        "user_create": "api.serializers.CustomUserCreateSerializer",
-        "current_user": "api.serializers.CustomUserProfileSerializer",
+        "user_create": "api.users.serializers.CustomUserCreateSerializer",
+        "current_user": "api.users.serializers.CustomUserProfileSerializer",
     },
     "PERMISSIONS": {
         "user_list": ["rest_framework.permissions.AllowAny"],
