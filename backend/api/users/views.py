@@ -34,12 +34,28 @@ class UserViewSet(DjoserUserViewset):
 
     @action(
         detail=True,
-        methods=["post", "delete"],
+        methods=["post"],
         url_path="subscribe",
         permission_classes=(IsAuthenticated,),
     )
     def subscribe(self, request, **kwargs) -> Response:
-        """Создаёт/удалет связь между пользователями.
+        """Создаёт связь между пользователями.
+        Args:
+            request: Request.
+        Returns:
+            Response: статус подписки.
+        """
+        serializer = SubscribeSerializer(
+            data={"user": request.user.id, "following": self.kwargs.get("id")},
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @subscribe.mapping.delete
+    def unsubscribe(self, request, **kwargs) -> Response:
+        """Удалет связь между пользователями.
         Args:
             request: Request.
         Returns:
@@ -47,20 +63,14 @@ class UserViewSet(DjoserUserViewset):
         """
         following = get_object_or_404(User, id=self.kwargs.get("id"))
         user = request.user.id
-        if request.method == "POST":
-            serializer = SubscribeSerializer(
-                data={"user": user, "following": self.kwargs.get("id")},
-                context={"request": request},
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        elif request.method == "DELETE":
-            cur_sub = Subscription.objects.filter(following=following, user=user)
-            if not cur_sub.exists():
-                return Response(status=HTTP_400_BAD_REQUEST)
-            cur_sub.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        deleted, _ = Subscription.objects.filter(
+            following=following, user=user
+        ).delete()
+        return (
+            Response(status=HTTP_400_BAD_REQUEST)
+            if deleted == 0
+            else Response(status=status.HTTP_204_NO_CONTENT)
+        )
 
     @action(
         detail=False,
@@ -76,16 +86,12 @@ class UserViewSet(DjoserUserViewset):
         Returns:
             Response: список подписок.
         """
-        user = request.user
-        subscriptions = User.objects.filter(following__user=user)
-        if subscriptions:
-            pages = self.paginate_queryset(subscriptions)
-            serializer = SubscribeGetSerializer(
-                pages, many=True, context={"request": request}
-            )
-            return self.get_paginated_response(serializer.data)
-        else:
-            return Response("Подписки отсутствуют", status=HTTP_400_BAD_REQUEST)
+        subscriptions = User.objects.filter(following__user=request.user)
+        pages = self.paginate_queryset(subscriptions)
+        serializer = SubscribeGetSerializer(
+            pages, many=True, context={"request": request}
+        )
+        return self.get_paginated_response(serializer.data)
 
     @action(detail=False, methods=["get"], permission_classes=(IsAuthenticated,))
     def me(self, request, *args, **kwargs) -> Response:
@@ -94,18 +100,20 @@ class UserViewSet(DjoserUserViewset):
 
     @action(
         detail=False,
-        methods=["put", "patch", "delete"],
+        methods=["put"],
         url_path="me/avatar",
         permission_classes=(IsAuthenticated,),
     )
-    def set_avatar(self, request) -> Response:
+    def avatar(self, request) -> Response:
         """Изменение аватара."""
-        if request.method == "PUT" or request.method == "PATCH":
-            serializer = AvatarSerializer(request.user, data=request.data, partial=True)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        elif request.method == "DELETE":
-            request.user.avatar.delete(save=True)
-            request.user.save()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        serializer = AvatarSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @avatar.mapping.delete
+    def delete_avatar(self, request) -> Response:
+        """Удаление аватара."""
+        request.user.avatar.delete(save=True)
+        request.user.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
