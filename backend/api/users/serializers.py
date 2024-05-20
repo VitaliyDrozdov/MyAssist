@@ -4,7 +4,6 @@ from django.db.models import QuerySet
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 
-from djoser.serializers import UserCreateSerializer as DjoserCreateUS
 from djoser.serializers import UserSerializer as DjoserMeUS
 
 from rest_framework import serializers
@@ -43,21 +42,6 @@ class AvatarSerializer(serializers.ModelSerializer):
         return data
 
 
-# class CustomUserCreateSerializer(DjoserCreateUS):
-#     """Сериализатор для регистрации пользователей. Унаследован от Djoser."""
-
-#     class Meta:
-#         model = User
-#         fields = (
-#             "email",
-#             "id",
-#             "username",
-#             "first_name",
-#             "last_name",
-#             "password"
-#         )
-
-
 class CustomUserProfileSerializer(DjoserMeUS):
     """Сериализатор для текущего пользователя. Унаследован от Djoser."""
 
@@ -83,16 +67,12 @@ class CustomUserProfileSerializer(DjoserMeUS):
         Returns:
             bool: true or false.
         """
-        # user = self.context.get("request").user
-        # if user.is_anonymous or obj == user:
-        #     return False
-        # return Subscription.objects.filter(user=user, following=obj).exists()
-        user = self.context.get("request").user
+        request = self.context.get("request")
         return (
-            self.context.get("request")
-            and Subscription.objects.filter(user=user, following=obj).exists()
-            and user.is_user_authenticated
-            and not obj == user
+            bool(request)
+            and request.user.is_authenticated
+            and Subscription.objects.filter(user=request.user, following=obj).exists()
+            and not obj == request.user
         )
 
 
@@ -128,13 +108,12 @@ class SubscribeGetSerializer(CustomUserProfileSerializer):
     recipes = serializers.SerializerMethodField()
 
     class Meta(CustomUserProfileSerializer.Meta):
-        class Meta(CustomUserSerializer.Meta):
-            CustomUserProfileSerializer.Meta.fields + (
-                "recipes",
-                "recipes_count",
-            )
+        fields = CustomUserProfileSerializer.Meta.fields + (
+            "recipes",
+            "recipes_count",
+        )
 
-        read_only_fields = ("email", "username", "first_name", "last_name", "avatar")
+    # read_only_fields = ("email", "username", "first_name", "last_name", "avatar")
 
     def get_recipes_count(self, obj: User) -> int:
         """Подсчет количества рецептов."""
@@ -153,7 +132,9 @@ class SubscribeGetSerializer(CustomUserProfileSerializer):
         request = self.context.get("request")
         recipes = obj.recipes.all()
         recipes_limit = request.query_params.get("recipes_limit")
-        if recipes_limit:
+        try:
             recipes = recipes[: int(recipes_limit)]
+        except Exception:
+            pass
         serializer = RecipeShortSerializer(recipes, many=True, read_only=True)
         return serializer.data

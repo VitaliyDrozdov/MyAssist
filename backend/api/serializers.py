@@ -114,15 +114,11 @@ class RecipeSerializer(serializers.ModelSerializer):
         Returns:
             bool: true or false.
         """
-        # user = self.context.get("request").user
-        # if user.is_anonymous:
-        #     return False
-        # return user.favorites.filter(recipe=obj).exists()
-        user = self.context.get("request").user
+        request = self.context.get("request")
         return (
-            self.context.get("request")
-            and user.favorites.filter(user=user, recipe=obj).exists()
-            and user.is_user_authenticated
+            bool(request)
+            and request.user.is_authenticated
+            and request.user.favorites.filter(user=request.user, recipe=obj).exists()
         )
 
     def get_is_in_shopping_cart(self, obj: Recipe) -> bool:
@@ -132,15 +128,13 @@ class RecipeSerializer(serializers.ModelSerializer):
         Returns:
             bool: true or false.
         """
-        # user = self.context.get("request").user
-        # if user.is_anonymous:
-        #     return False
-        # return user.shopping_cart.filter(recipe=obj).exists()
-        user = self.context.get("request").user
+        request = self.context.get("request")
         return (
-            self.context.get("request")
-            and user.shopping_cart.filter(user=user, recipe=obj).exists()
-            and user.is_user_authenticated
+            bool(request)
+            and request.user.is_authenticated
+            and request.user.shopping_cart.filter(
+                user=request.user, recipe=obj
+            ).exists()
         )
 
 
