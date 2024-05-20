@@ -114,10 +114,16 @@ class RecipeSerializer(serializers.ModelSerializer):
         Returns:
             bool: true or false.
         """
+        # user = self.context.get("request").user
+        # if user.is_anonymous:
+        #     return False
+        # return user.favorites.filter(recipe=obj).exists()
         user = self.context.get("request").user
-        if user.is_anonymous:
-            return False
-        return user.favorites.filter(recipe=obj).exists()
+        return (
+            self.context.get("request")
+            and user.favorites.filter(user=user, recipe=obj).exists()
+            and user.is_user_authenticated
+        )
 
     def get_is_in_shopping_cart(self, obj: Recipe) -> bool:
         """Проверяет статус находится ли в списке покупок.
@@ -126,10 +132,16 @@ class RecipeSerializer(serializers.ModelSerializer):
         Returns:
             bool: true or false.
         """
+        # user = self.context.get("request").user
+        # if user.is_anonymous:
+        #     return False
+        # return user.shopping_cart.filter(recipe=obj).exists()
         user = self.context.get("request").user
-        if user.is_anonymous:
-            return False
-        return user.shopping_cart.filter(recipe=obj).exists()
+        return (
+            self.context.get("request")
+            and user.shopping_cart.filter(user=user, recipe=obj).exists()
+            and user.is_user_authenticated
+        )
 
 
 class RecipeCreateUpdateDeleteSerializer(serializers.ModelSerializer):

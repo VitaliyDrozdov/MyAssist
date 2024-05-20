@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 
 from foodgram import constants
 
+
 User = get_user_model()
 # Все постоянные величины выносим в файл constants
 
@@ -107,40 +108,55 @@ class Recipe(models.Model):
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    # amount = models.IntegerField()
+    amount = models.IntegerField(
+        validators=[
+            MinValueValidator(
+                constants.MIN_TIME,
+                f"Количество не может быть меньше {constants.MIN_AMOUNT}",
+            ),
+            MaxValueValidator(
+                constants.MAX_TIME,
+                f"Количество не может быть больше {constants.MAX_AMOUNT}",
+            ),
+        ],
+    )
 
     class Meta:
         verbose_name = "RecipeIngredient"
         verbose_name_plural = "RecipeIngredients"
 
 
-class Favorite(models.Model):
+class FavoriteShoppingBasemodel(models.Model):
+    from recipe.models import Recipe
+
     user = models.ForeignKey(
-        to=User, on_delete=models.CASCADE, related_name="favorites"
+        to=User, on_delete=models.CASCADE, verbose_name="Пользователь"
     )
     recipe = models.ForeignKey(
-        to=Recipe, on_delete=models.CASCADE, related_name="favorites"
+        to=Recipe, on_delete=models.CASCADE, verbose_name="Рецепт"
     )
+
+    class Meta:
+        abstract = True
+
+
+class Favorite(FavoriteShoppingBasemodel):
 
     class Meta:
         verbose_name = "Favorite"
         verbose_name_plural = "Favorites"
+        default_related_name = "favorites"
 
     def __str__(self):
         return "Избранное"
 
 
-class ShoppingCart(models.Model):
-    user = models.ForeignKey(
-        to=User, on_delete=models.CASCADE, related_name="shopping_cart"
-    )
-    recipe = models.ForeignKey(
-        to=Recipe, on_delete=models.CASCADE, related_name="shopping_cart"
-    )
+class ShoppingCart(FavoriteShoppingBasemodel):
 
     class Meta:
         verbose_name = "ShoppingCart"
         verbose_name_plural = "ShoppingCart"
+        default_related_name = "shopping_cart"
 
     def __str__(self):
         return "Список покупок"

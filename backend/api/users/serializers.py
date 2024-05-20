@@ -43,19 +43,19 @@ class AvatarSerializer(serializers.ModelSerializer):
         return data
 
 
-class CustomUserCreateSerializer(DjoserCreateUS):
-    """Сериализатор для регистрации пользователей. Унаследован от Djoser."""
+# class CustomUserCreateSerializer(DjoserCreateUS):
+#     """Сериализатор для регистрации пользователей. Унаследован от Djoser."""
 
-    class Meta:
-        model = User
-        fields = (
-            "email",
-            "id",
-            "username",
-            "first_name",
-            "last_name",
-            "password"
-        )
+#     class Meta:
+#         model = User
+#         fields = (
+#             "email",
+#             "id",
+#             "username",
+#             "first_name",
+#             "last_name",
+#             "password"
+#         )
 
 
 class CustomUserProfileSerializer(DjoserMeUS):
@@ -83,10 +83,17 @@ class CustomUserProfileSerializer(DjoserMeUS):
         Returns:
             bool: true or false.
         """
+        # user = self.context.get("request").user
+        # if user.is_anonymous or obj == user:
+        #     return False
+        # return Subscription.objects.filter(user=user, following=obj).exists()
         user = self.context.get("request").user
-        if user.is_anonymous or obj == user:
-            return False
-        return Subscription.objects.filter(user=user, following=obj).exists()
+        return (
+            self.context.get("request")
+            and Subscription.objects.filter(user=user, following=obj).exists()
+            and user.is_user_authenticated
+            and not obj == user
+        )
 
 
 class SubscribeSerializer(serializers.ModelSerializer):
@@ -104,8 +111,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         return SubscribeGetSerializer(
-            instance.following,
-            context={"request": self.context.get("request")}
+            instance.following, context={"request": self.context.get("request")}
         ).data
 
     def validate_following(self, val):
@@ -122,24 +128,13 @@ class SubscribeGetSerializer(CustomUserProfileSerializer):
     recipes = serializers.SerializerMethodField()
 
     class Meta(CustomUserProfileSerializer.Meta):
-        fields = (
-            "email",
-            "id",
-            "username",
-            "first_name",
-            "last_name",
-            "is_subscribed",
-            "recipes",
-            "recipes_count",
-            "avatar",
-        )
-        read_only_fields = (
-            "email",
-            "username",
-            "first_name",
-            "last_name",
-            "avatar"
-        )
+        class Meta(CustomUserSerializer.Meta):
+            CustomUserProfileSerializer.Meta.fields + (
+                "recipes",
+                "recipes_count",
+            )
+
+        read_only_fields = ("email", "username", "first_name", "last_name", "avatar")
 
     def get_recipes_count(self, obj: User) -> int:
         """Подсчет количества рецептов."""
