@@ -87,12 +87,6 @@ class Recipe(models.Model):
             ),
         ],
     )
-    # is_favorited = models.BooleanField(
-    #     verbose_name="В избранном", blank=True, null=True
-    # )
-    # is_in_shopping_cart = models.BooleanField(
-    #     verbose_name="В списке покупок", blank=True, null=True
-    # )
     pub_date = models.DateTimeField(
         verbose_name="Дата публикации", auto_now_add=True, db_index=True
     )
@@ -108,7 +102,7 @@ class Recipe(models.Model):
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    amount = models.IntegerField(
+    amount = models.PositiveSmallIntegerField(
         validators=[
             MinValueValidator(
                 constants.MIN_TIME,

@@ -57,10 +57,20 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
     id = serializers.IntegerField(write_only=True)
     amount = serializers.IntegerField(write_only=True)
+    # id = serializers.PrimaryKeyRelatedField(
+    #     queryset=Ingredient.objects.all(), source="Ingredient"
+    # )
 
     class Meta:
         model = RecipeIngredient
         fields = ("id", "amount")
+
+    # def validate_amount(self, value):
+    #     if value <= 0:
+    #         raise serializers.ValidationError(
+    #             "Количество должно быть положительным числом."
+    #         )
+    #     return value
 
 
 class RecipeSerializer(serializers.ModelSerializer):
