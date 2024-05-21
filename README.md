@@ -36,6 +36,6 @@
 </p>
 
 
-## Автор:
+## Автор :
 
 [VitaliyDrozdov](https://github.com/VitaliyDrozdov)
