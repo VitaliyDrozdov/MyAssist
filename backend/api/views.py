@@ -13,7 +13,6 @@ from rest_framework.status import (
     HTTP_204_NO_CONTENT,
 )
 
-
 from api.filters import IngredientFilter, RecipeFilter
 from api.pagination import LimitPagination
 from api.permissions import IsAuthorAdminOrReadOnly
@@ -37,7 +36,7 @@ class IngredientListDetailViewSet(viewsets.ReadOnlyModelViewSet):
     Возможен поиск по имени.
     """
 
-    serializer_class: type[IngredientSerializer] = IngredientSerializer
+    serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
     filter_backends = (IngredientFilter,)
     search_fields = ("^name",)
@@ -65,9 +64,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
     permission_classes = (IsAuthorAdminOrReadOnly,)
-
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
 
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
@@ -105,37 +101,54 @@ class RecipeViewSet(viewsets.ModelViewSet):
             Response: статус рецепта.
         """
         recipe = get_object_or_404(Recipe, id=pk)
-        cur_recipe = getattr(request.user, related_name).filter(recipe=recipe)
-        if not cur_recipe.exists():
-            return Response(status=HTTP_400_BAD_REQUEST)
-        cur_recipe.delete()
-        return Response(status=HTTP_204_NO_CONTENT)
+        cur_recipe_deleted, _ = (
+            getattr(request.user, related_name).filter(recipe=recipe).delete()
+        )
+        return (
+            Response(status=HTTP_400_BAD_REQUEST)
+            if cur_recipe_deleted == 0
+            else Response(status=HTTP_204_NO_CONTENT)
+        )
 
-    @action(detail=True, methods=["post", "delete"], url_path="favorite")
+    @action(detail=True, methods=["post"], url_path="favorite")
     def favorite(self, request, pk: int) -> Response:
-        """Функция обработки списка избранного. Добавление | удаление рецептов.
+        """Функция обработки списка избранного. Добавление рецептов.
         Args:
             request: Request.
             pk (int): id рецепта
         Returns: статус рецепта.
         """ """"""
-        if request.method == "POST":
-            return self.__add__recipe(request, pk, FavoritesSerializer)
-        elif request.method == "DELETE":
-            return self.__delete_recipe(request, pk, "favorites")
+        return self.__add__recipe(request, pk, FavoritesSerializer)
 
-    @action(detail=True, methods=["post", "delete"], url_path="shopping_cart")
-    def shopping_cart(self, request, pk: int) -> Response:
-        """Функция обработки списка покупок. Добавление | удаление рецептов.
+    @favorite.mapping.delete
+    def delete_favorite(self, request, pk: int) -> Response:
+        """Функция обработки списка избранного. Удаление рецептов.
         Args:
             request: Request.
             pk (int): id рецепта
         Returns: статус рецепта.
         """ """"""
-        if request.method == "POST":
-            return self.__add__recipe(request, pk, ShoppingCartSerializer)
-        elif request.method == "DELETE":
-            return self.__delete_recipe(request, pk, "shopping_cart")
+        return self.__delete_recipe(request, pk, "favorites")
+
+    @action(detail=True, methods=["post"], url_path="shopping_cart")
+    def shopping_cart(self, request, pk: int) -> Response:
+        """Функция обработки списка покупок. Добавление рецептов.
+        Args:
+            request: Request.
+            pk (int): id рецепта
+        Returns: статус рецепта.
+        """ """"""
+        return self.__add__recipe(request, pk, ShoppingCartSerializer)
+
+    @shopping_cart.mapping.delete
+    def delete_from_shopping_cart(self, request, pk: int) -> Response:
+        """Функция обработки списка покупок. Удалениерецептов.
+        Args:
+            request: Request.
+            pk (int): id рецепта
+        Returns: статус рецепта.
+        """ """"""
+        return self.__delete_recipe(request, pk, "shopping_cart")
 
     @action(detail=False, methods=["get"], url_path="download_shopping_cart")
     def download_shopping_cart(self, request) -> HttpResponse:
