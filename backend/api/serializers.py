@@ -21,6 +21,7 @@ from api.users.serializers import CustomUserProfileSerializer
 
 User = get_user_model()
 
+
 class IngredientSerializer(serializers.ModelSerializer):
     """Сериализатор для модели ингредиентов."""
 
