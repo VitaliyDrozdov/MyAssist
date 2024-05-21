@@ -4,7 +4,6 @@ from string import ascii_lowercase, ascii_uppercase, digits
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 
 from foodgram import constants
 
@@ -57,7 +56,8 @@ class Recipe(models.Model):
         User, on_delete=models.CASCADE, related_name="recipes", db_index=True
     )
     name = models.CharField(
-        verbose_name="Наименование рецепта", max_length=constants.CHAR_256_LENGTH
+        verbose_name="Наименование рецепта", 
+        max_length=constants.CHAR_256_LENGTH
     )
     image = models.ImageField(
         verbose_name="Изображение",
@@ -72,7 +72,10 @@ class Recipe(models.Model):
         through="RecipeIngredient",
         related_name="recipes",
     )
-    tags = models.ManyToManyField(verbose_name="Тэг", to=Tag, related_name="recipes")
+    tags = models.ManyToManyField(
+        verbose_name="Тэг",
+        to=Tag, related_name="recipes"
+    )
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name="Время приготовления",
         validators=[

@@ -1,8 +1,6 @@
-import base64
 from collections import OrderedDict
 
 from django.contrib.auth import get_user_model
-from django.core.files.base import ContentFile
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
@@ -22,19 +20,6 @@ from recipe.models import (
 from api.users.serializers import CustomUserProfileSerializer
 
 User = get_user_model()
-
-
-# class Base64ImageField(serializers.ImageField):
-#     """Преобразование изображения в текстовую строку."""
-
-#     def to_internal_value(self, data: str):
-#         if isinstance(data, str) and data.startswith("data:image"):
-#             format, imgstr = data.split(";base64,")
-#             ext: str = format.split("/")[-1]
-#             data = ContentFile(base64.b64decode(imgstr), name="temp." + ext)
-
-#         return super().to_internal_value(data)
-
 
 class IngredientSerializer(serializers.ModelSerializer):
     """Сериализатор для модели ингредиентов."""
@@ -76,7 +61,9 @@ class IngredientGetSerializer(serializers.ModelSerializer):
 
     id = serializers.IntegerField(source="ingredient.id")
     name = serializers.CharField(source="ingredient.name")
-    measurement_unit = serializers.CharField(source="ingredient.measurement_unit")
+    measurement_unit = serializers.CharField(
+        source="ingredient.measurement_unit"
+    )
 
     class Meta:
         model = RecipeIngredient
@@ -87,7 +74,10 @@ class RecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для модели рецептов."""
 
     tags = TagSerializer(many=True)
-    ingredients = IngredientGetSerializer(many=True, source="recipeingredient_set")
+    ingredients = IngredientGetSerializer(
+        many=True,
+        source="recipeingredient_set"
+    )
     image = Base64ImageField()
     author = CustomUserProfileSerializer(read_only=True)
     is_favorited = serializers.SerializerMethodField()
@@ -119,7 +109,9 @@ class RecipeSerializer(serializers.ModelSerializer):
         return (
             bool(request)
             and request.user.is_authenticated
-            and request.user.favorites.filter(user=request.user, recipe=obj).exists()
+            and request.user.favorites.filter(
+                user=request.user, recipe=obj
+            ).exists()
         )
 
     def get_is_in_shopping_cart(self, obj: Recipe) -> bool:
@@ -142,7 +134,9 @@ class RecipeSerializer(serializers.ModelSerializer):
 class RecipeCreateUpdateDeleteSerializer(serializers.ModelSerializer):
     """Сериализатор страницы рецепта."""
 
-    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True)
+    tags = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(), many=True
+    )
     ingredients = RecipeIngredientSerializer(many=True)
     image = Base64ImageField()
     author = CustomUserProfileSerializer(read_only=True)
@@ -167,27 +161,34 @@ class RecipeCreateUpdateDeleteSerializer(serializers.ModelSerializer):
         if not (tags := data.get("tags")):
             raise serializers.ValidationError("Не передано поле 'tags'.")
         if not (ingredients := data.get("ingredients")):
-            raise serializers.ValidationError("Не передано поле 'ingredients'.")
+            raise serializers.ValidationError(
+                "Не передано поле 'ingredients'."
+            )
         ingr_ids = [ingredient["ingredient"].id for ingredient in ingredients]
         if len(tags) == 0:
             raise serializers.ValidationError("Добавьте хотя бы один тэг.")
         if len(ingredients) == 0:
-            raise serializers.ValidationError("Добавьте хотя бы один ингредиент.")
+            raise serializers.ValidationError(
+                "Добавьте хотя бы один ингредиент."
+            )
 
         if len(set(ingr_ids)) != len(ingr_ids):
             raise serializers.ValidationError("Ингредиент уже добавлен.")
         if len(set(tags)) != len(tags):
             raise serializers.ValidationError("Тэг уже добавлен.")
         for ingredient in ingredients:
-            if not Ingredient.objects.filter(id=ingredient["ingredient"].id).exists():
+            if not Ingredient.objects.filter(
+                id=ingredient["ingredient"].id
+            ).exists():
                 raise serializers.ValidationError("Ингредиент не существует.")
         return data
 
     def validate_image(self, val: str) -> bool:
         if not val:
-            raise serializers.ValidationError("Необходимо прикрепить изображение.")
+            raise serializers.ValidationError(
+                "Необходимо прикрепить изображение."
+            )
         return val
-
 
     @staticmethod
     def add_tags_ingredients(
@@ -272,7 +273,9 @@ class FavoritesSerializer(serializers.ModelSerializer):
         recipe = data.get("recipe")
         user = data.get("user")
         if user.favorites.filter(recipe=recipe).exists():
-            raise serializers.ValidationError("Рецепт уже добавлен в избранное.")
+            raise serializers.ValidationError(
+                "Рецепт уже добавлен в избранное."
+            )
         return data
 
 
@@ -310,11 +313,11 @@ class ShortLinkSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context.get("request")
         pk = self.initial_data.get("pk")
-        recipe_detail_url = reverse("recipes-detail", args=[pk]).replace("api/", "")
+        recipe_detail_url = reverse(
+            "recipes-detail",
+            args=[pk]
+        ).replace("api/", "")
         host = request.META.get('HTTP_HOST')
-        # port = request.META.get('SERVER_PORT')
-        # if port and port not in ['80', '443']:
-        #     host = f"{host}:{port}"
         original_link = f"https://{host}" f"{recipe_detail_url}"
         link, _ = Link.objects.get_or_create(
             original_link=original_link, **validated_data

@@ -9,9 +9,18 @@ class CustomUser(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username", "first_name", "last_name"]
     email = models.EmailField(validators=[EmailValidator()], unique=True)
-    first_name = models.CharField(verbose_name="Имя", max_length=CHAR_150_LENGTH)
-    last_name = models.CharField(verbose_name="Фамилия", max_length=CHAR_150_LENGTH)
-    password = models.CharField(verbose_name="Пароль", max_length=CHAR_128_LENGTH)
+    first_name = models.CharField(
+        verbose_name="Имя",
+        max_length=CHAR_150_LENGTH
+    )
+    last_name = models.CharField(
+        verbose_name="Фамилия",
+        max_length=CHAR_150_LENGTH
+    )
+    password = models.CharField(
+        verbose_name="Пароль",
+        max_length=CHAR_128_LENGTH
+    )
     avatar = models.ImageField(
         verbose_name="Аватар", upload_to="avatars", null=True, blank=True
     )
@@ -46,7 +55,9 @@ class Subscription(models.Model):
                 fields=["user", "following"], name="unique_user_following"
             ),
             models.CheckConstraint(
-                check=models.Q(user=models.F("user")), name="prevent_self_follow"
+                check=models.Q(
+                    user=models.F("user")),
+                name="prevent_self_follow"
             ),
         ]
 
