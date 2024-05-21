@@ -14,7 +14,6 @@ class CustomUserModel(admin.ModelAdmin):
         "last_name",
         "password",
         "avatar",
-        # "is_subscribed",
     )
     list_editable = (
         "username",
@@ -22,7 +21,6 @@ class CustomUserModel(admin.ModelAdmin):
         "last_name",
         "password",
         "avatar",
-        # "is_subscribed",
     )
     search_fields = ("username", "email")
 

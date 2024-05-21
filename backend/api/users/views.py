@@ -93,7 +93,10 @@ class UserViewSet(DjoserUserViewset):
         )
         return self.get_paginated_response(serializer.data)
 
-    @action(detail=False, methods=["get"], permission_classes=(IsAuthenticated,))
+    @action(
+        detail=False, methods=["get"],
+        permission_classes=(IsAuthenticated,)
+    )
     def me(self, request, *args, **kwargs) -> Response:
         """Переопределение методов для эндпоинта /me/."""
         return super().me(request, *args, **kwargs)
@@ -106,7 +109,11 @@ class UserViewSet(DjoserUserViewset):
     )
     def avatar(self, request) -> Response:
         """Изменение аватара."""
-        serializer = AvatarSerializer(request.user, data=request.data, partial=True)
+        serializer = AvatarSerializer(
+            request.user,
+            data=request.data,
+            partial=True
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)

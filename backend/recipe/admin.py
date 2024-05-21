@@ -9,7 +9,15 @@ from recipe.models import (
     Tag,
 )
 
+from foodgram.constants import MIN_AMOUNT
+
 admin.site.empty_value_display = "Null"
+
+
+class RecipeIngredientInline(admin.TabularInline):
+    model = RecipeIngredient
+    extra = 2
+    min_num = MIN_AMOUNT
 
 
 @admin.register(Recipe)
@@ -19,8 +27,6 @@ class RecipeAdmin(admin.ModelAdmin):
         "name",
         "image",
         "text",
-        # "is_favorited",
-        # "is_in_shopping_cart",
         "pub_date",
         "get_tag",
         "cnt_favoties",
@@ -29,12 +35,12 @@ class RecipeAdmin(admin.ModelAdmin):
         "name",
         "image",
         "text",
-        # "is_favorited",
-        # "is_in_shopping_cart",
     )
     list_display_links = ("author",)
     search_fields = ("author", "name")
     list_filter = ("tags",)
+
+    inlines = (RecipeIngredientInline,)
 
     @admin.display(description="Тэг")
     def get_tag(self, obj):
@@ -63,7 +69,7 @@ class IngredientAdmin(admin.ModelAdmin):
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    pass
+    list_display = ("id", "name", "slug")
 
 
 @admin.register(RecipeIngredient)

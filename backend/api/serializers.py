@@ -1,16 +1,14 @@
 import base64
 from collections import OrderedDict
 
-
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
-from django.db.models import QuerySet
-
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
-from foodgram.constants import MIN_AMOUNT, MAX_AMOUNT
+from drf_extra_fields.fields import Base64ImageField
 
+from foodgram.constants import MIN_AMOUNT, MAX_AMOUNT
 
 from recipe.models import (
     Favorite,
@@ -26,16 +24,16 @@ from api.users.serializers import CustomUserProfileSerializer
 User = get_user_model()
 
 
-class Base64ImageField(serializers.ImageField):
-    """Преобразование изображения в текстовую строку."""
+# class Base64ImageField(serializers.ImageField):
+#     """Преобразование изображения в текстовую строку."""
 
-    def to_internal_value(self, data: str):
-        if isinstance(data, str) and data.startswith("data:image"):
-            format, imgstr = data.split(";base64,")
-            ext: str = format.split("/")[-1]
-            data = ContentFile(base64.b64decode(imgstr), name="temp." + ext)
+#     def to_internal_value(self, data: str):
+#         if isinstance(data, str) and data.startswith("data:image"):
+#             format, imgstr = data.split(";base64,")
+#             ext: str = format.split("/")[-1]
+#             data = ContentFile(base64.b64decode(imgstr), name="temp." + ext)
 
-        return super().to_internal_value(data)
+#         return super().to_internal_value(data)
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -57,8 +55,6 @@ class TagSerializer(serializers.ModelSerializer):
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     """Сериализатор для связанной модели рецепта и ингредиента."""
 
-    # id = serializers.IntegerField(write_only=True)
-    # amount = serializers.IntegerField(write_only=True)
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all(), source="ingredient"
     )
@@ -186,6 +182,12 @@ class RecipeCreateUpdateDeleteSerializer(serializers.ModelSerializer):
             if not Ingredient.objects.filter(id=ingredient["ingredient"].id).exists():
                 raise serializers.ValidationError("Ингредиент не существует.")
         return data
+
+    def validate_image(self, val: str) -> bool:
+        if not val:
+            raise serializers.ValidationError("Необходимо прикрепить изображение.")
+        return val
+
 
     @staticmethod
     def add_tags_ingredients(

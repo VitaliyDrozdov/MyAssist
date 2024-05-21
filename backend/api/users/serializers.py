@@ -71,7 +71,10 @@ class CustomUserProfileSerializer(DjoserMeUS):
         return (
             bool(request)
             and request.user.is_authenticated
-            and Subscription.objects.filter(user=request.user, following=obj).exists()
+            and Subscription.objects.filter(
+                user=request.user,
+                following=obj
+            ).exists()
             and not obj == request.user
         )
 
@@ -91,7 +94,9 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         return SubscribeGetSerializer(
-            instance.following, context={"request": self.context.get("request")}
+            instance.following, context={
+                "request": self.context.get("request")
+            }
         ).data
 
     def validate_following(self, val):
@@ -113,14 +118,12 @@ class SubscribeGetSerializer(CustomUserProfileSerializer):
             "recipes_count",
         )
 
-    # read_only_fields = ("email", "username", "first_name", "last_name", "avatar")
-
     def get_recipes_count(self, obj: User) -> int:
         """Подсчет количества рецептов."""
         return obj.recipes.count()
 
     def get_recipes(self, obj: User) -> QuerySet[dict]:
-        """Полачает список репептов пользователя.
+        """Получает список репептов пользователя.
         Args:
             recipe (User): исходный пользователь.
 

@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 
 from django.db.models import Sum
-from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
@@ -79,12 +79,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         Returns:
             Response: статус рецепта.
         """
-        try:
-            recipe = get_object_or_404(Recipe, id=pk)
-        except Http404:
-            return Response(status=HTTP_400_BAD_REQUEST)
         serializer = serializer_class(
-            data={"user": request.user.id, "recipe": recipe.id},
+            data={"user": request.user.id, "recipe": pk},
             context={"request": request},
         )
         serializer.is_valid(raise_exception=True)
@@ -186,7 +182,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         Returns:
             Response: url ссылка вида s/short_code.
         """
-        serializer = ShortLinkSerializer(data={"pk": pk}, context={"request": request})
+        serializer = ShortLinkSerializer(
+            data={"pk": pk}, 
+            context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
