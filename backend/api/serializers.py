@@ -311,10 +311,16 @@ class ShortLinkSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         pk = self.initial_data.get("pk")
         recipe_detail_url = reverse("recipes-detail", args=[pk]).replace("api/", "")
-        original_link = f"http://{request.META['HTTP_HOST']}" f"{recipe_detail_url}"
+        host = request.META.get('HTTP_HOST')
+        # port = request.META.get('SERVER_PORT')
+        # if port and port not in ['80', '443']:
+        #     host = f"{host}:{port}"
+        original_link = f"https://{host}" f"{recipe_detail_url}"
         link, _ = Link.objects.get_or_create(
             original_link=original_link, **validated_data
         )
+        link.short_link = host
+        link.save()
         return link
 
     def to_representation(self, instance):

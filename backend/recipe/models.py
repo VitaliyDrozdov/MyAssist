@@ -10,7 +10,6 @@ from foodgram import constants
 
 
 User = get_user_model()
-# Все постоянные величины выносим в файл constants
 
 
 class Ingredient(models.Model):
@@ -157,10 +156,10 @@ class ShoppingCart(FavoriteShoppingBasemodel):
 
 
 class Link(models.Model):
-
     original_link = models.URLField(blank=True)
     short_code = models.SlugField(max_length=5, unique=True, blank=True)
     EMAIL_RANGDOM_CHARS = ascii_lowercase + ascii_uppercase + digits
+    __host = None
 
     class Meta:
         verbose_name = "Link"
@@ -184,4 +183,15 @@ class Link(models.Model):
 
     @property
     def short_link(self):
-        return f"https://foodgram.example.org/s/{self.short_code}"
+        from foodgram import settings
+        if not self.__host:
+            self.__host = "localhost"
+        port = getattr(settings, "PORT", None)
+        if port:
+            return f"http://{self.__host}:{port}/s/{self.short_code}"
+        else:
+            return f"http://{self.__host}/s/{self.short_code}"
+
+    @short_link.setter
+    def short_link(self, host):
+        self.__host = str(host)
