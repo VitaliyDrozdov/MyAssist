@@ -6,7 +6,6 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.status import HTTP_400_BAD_REQUEST
 
 
 from api.pagination import LimitPagination
@@ -48,7 +47,9 @@ class UserViewSet(DjoserUserViewset):
         serializer = SubscribeSerializer(
             data={
                 "user": get_object_or_404(User, id=request.user.id).id,
-                "following": get_object_or_404(User, id=self.kwargs.get("id")).id,
+                "following": get_object_or_404(
+                    User, id=self.kwargs.get("id")
+                ).id,
             },
             context={"request": request},
         )

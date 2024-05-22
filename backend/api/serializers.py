@@ -6,8 +6,6 @@ from rest_framework.reverse import reverse
 
 from drf_extra_fields.fields import Base64ImageField
 
-from foodgram.constants import MIN_AMOUNT, MAX_AMOUNT
-
 from recipe.models import (
     Favorite,
     Ingredient,
