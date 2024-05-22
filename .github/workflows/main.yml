@@ -82,7 +82,7 @@ jobs:
         with:
           context: ./frontend/
           push: true
-          tags: drvetall/frontend_frontend:latest
+          tags: drvetall/foodgram_frontend:latest
   build_nginx_and_push_to_docker_hub:
     name: Push nginx Docker image to DockerHub
     runs-on: ubuntu-latest

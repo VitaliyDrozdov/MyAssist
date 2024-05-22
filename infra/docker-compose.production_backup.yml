@@ -5,6 +5,7 @@ volumes:
   static:
   media:
 
+
 services:
   db:
     container_name: db
@@ -35,8 +36,7 @@ services:
     volumes:
       - static:/staticfiles/
       - media:/media/
+      - redoc:/usr/share/nginx/html/api/docs/
     depends_on:
       - backend
       - frontend
-    
-

@@ -5,6 +5,7 @@ volumes:
   static:
   media:
 
+
 services:
   db:
     container_name: db
@@ -38,5 +39,3 @@ services:
     depends_on:
       - backend
       - frontend
-    
-
