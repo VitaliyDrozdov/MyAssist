@@ -5,7 +5,7 @@
     <img align="center" src="frontend/src/images/logo-header.png" width="200">
 </p>
 
-<p align="center">
+<p>
     <a href= "https://github.com/VitaliyDrozdov/foodgram/actions/">
     <img alt="GitHub - Test status" src="https://github.com/VitaliyDrozdov/foodgram/actions/workflows/main.yml/badge.svg">
     </a>
@@ -17,6 +17,7 @@
     <a href="https://www.python.org/">
 	    <img src="https://img.shields.io/pypi/pyversions/py?style=for-the-badge&logo=python)" alt="Python">
     </a>
+    <br>
     <a href="https://www.docker.com/">
 	    <img alt="docker" src="https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white">
      </a>
