@@ -46,7 +46,10 @@ class UserViewSet(DjoserUserViewset):
             Response: статус подписки.
         """
         serializer = SubscribeSerializer(
-            data={"user": request.user.id, "following": self.kwargs.get("id")},
+            data={
+                "user": get_object_or_404(User, id=request.user.id).id,
+                "following": get_object_or_404(User, id=self.kwargs.get("id")).id,
+            },
             context={"request": request},
         )
         serializer.is_valid(raise_exception=True)
@@ -66,11 +69,13 @@ class UserViewSet(DjoserUserViewset):
         deleted, _ = Subscription.objects.filter(
             following=following, user=user
         ).delete()
-        return (
-            Response(status=HTTP_400_BAD_REQUEST)
-            if deleted == 0
-            else Response(status=status.HTTP_204_NO_CONTENT)
-        )
+        if not deleted:
+            response_status = status.HTTP_400_BAD_REQUEST
+            response_data = "Пользователь отсутствует в подписках."
+        else:
+            response_status = status.HTTP_204_NO_CONTENT
+            response_data = None
+        return Response(response_data, status=response_status)
 
     @action(
         detail=False,

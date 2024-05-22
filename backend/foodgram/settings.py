@@ -99,7 +99,7 @@ else:
         }
     }
 
-PORT = os.getenv("PORT", 8000)
+PORT = os.getenv("PORT")
 
 AUTH_PASSWORD_VALIDATORS = [
     {

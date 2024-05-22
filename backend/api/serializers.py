@@ -49,13 +49,6 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         model = RecipeIngredient
         fields = ("id", "amount")
 
-    def validate_amount(self, value):
-        if MIN_AMOUNT > value or value > MAX_AMOUNT:
-            raise serializers.ValidationError(
-                f"Введите значение в диапазоне {MIN_AMOUNT} - {MAX_AMOUNT}."
-            )
-        return value
-
 
 class IngredientGetSerializer(serializers.ModelSerializer):
     """Получение ингредиентов для рецепта."""
@@ -177,11 +170,6 @@ class RecipeCreateUpdateDeleteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Ингредиент уже добавлен.")
         if len(set(tags)) != len(tags):
             raise serializers.ValidationError("Тэг уже добавлен.")
-        for ingredient in ingredients:
-            if not Ingredient.objects.filter(
-                id=ingredient["ingredient"].id
-            ).exists():
-                raise serializers.ValidationError("Ингредиент не существует.")
         return data
 
     def validate_image(self, val: str) -> bool:

@@ -14,10 +14,10 @@ User = get_user_model()
 class Ingredient(models.Model):
 
     name = models.CharField(
-        max_length=constants.CHAR_128_LENGTH, verbose_name="Наименование"
+        max_length=constants.INGR_MAX_LENGTH, verbose_name="Наименование"
     )
     measurement_unit = models.CharField(
-        max_length=64,
+        max_length=constants.MEASURMENT_MAX_LENGTH,
         verbose_name="Единицы измерения",
     )
 
@@ -37,10 +37,10 @@ class Ingredient(models.Model):
 
 class Tag(models.Model):
     name = models.CharField(
-        verbose_name="Имя тэга", max_length=constants.CHAR_32_LENGTH
+        verbose_name="Имя тэга", max_length=constants.TAG_MAX_LENGTH
     )
     slug = models.SlugField(
-        verbose_name="Слаг", unique=True, max_length=constants.CHAR_32_LENGTH
+        verbose_name="Слаг", unique=True, max_length=constants.TAG_MAX_LENGTH
     )
 
     class Meta:
@@ -57,7 +57,7 @@ class Recipe(models.Model):
     )
     name = models.CharField(
         verbose_name="Наименование рецепта",
-        max_length=constants.CHAR_256_LENGTH
+        max_length=constants.RECIPE_MAX_LENGTH
     )
     image = models.ImageField(
         verbose_name="Изображение",
@@ -187,6 +187,7 @@ class Link(models.Model):
     @property
     def short_link(self):
         from foodgram import settings
+
         if not self.__host:
             self.__host = "localhost"
         port = getattr(settings, "PORT", None)

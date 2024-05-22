@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_204_NO_CONTENT,
+    HTTP_200_OK
 )
 
 from api.filters import IngredientFilter, RecipeFilter
@@ -100,11 +101,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
         cur_recipe_deleted, _ = (
             getattr(request.user, related_name).filter(recipe=recipe).delete()
         )
-        return (
-            Response(status=HTTP_400_BAD_REQUEST)
-            if cur_recipe_deleted == 0
-            else Response(status=HTTP_204_NO_CONTENT)
-        )
+        if not cur_recipe_deleted:
+            response_status = HTTP_400_BAD_REQUEST
+            response_data = "Рецепт отсутствует в списке."
+        else:
+            response_status = HTTP_204_NO_CONTENT
+            response_data = None
+        return Response(response_data, status=response_status)
 
     @action(detail=True, methods=["post"], url_path="favorite")
     def favorite(self, request, pk: int) -> Response:
@@ -190,7 +193,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=HTTP_200_OK)
 
 
 @api_view(["GET"])
