@@ -15,7 +15,7 @@
 <p align="center">
 	<img src="https://img.shields.io/badge/GNU%20Bash-4EAA25.svg?style=flat&logo=GNU-Bash&logoColor=white" alt="GNU%20Bash">
     <a href="https://www.python.org/">
-	    <img src="![PyPI - Python Version](https://img.shields.io/pypi/pyversions/py?style=for-the-badge&logo=python)" alt="Python">
+	    <img src="https://img.shields.io/pypi/pyversions/py?style=for-the-badge&logo=python)" alt="Python">
     </a>
     <a href="https://www.docker.com/">
 	    <img alt="docker" src="https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white">
@@ -44,9 +44,9 @@
 
 - [📍 Описание](#-описание)
 - [🚀 Запуск проекта](#-запуск)
-- [⚙️ Заполнение БД данными](#️-Загрузитьданные)
+- [⚙️ Загрузить данные](#️-Загрузитьданные)
 - [🤖 Документация](#-Документация)
-- [🧪 Примеры запросов / ответов](#-Примеры)
+- [🧪 Примеры запросов](#-Примеры)
 - [🛠 Ссылка на сайт](#-project-roadmap)
 - [📄 Автор](#-автор)
 </details>
@@ -124,7 +124,7 @@ sudo docker exec -it backend python manage.py import_data
 ```
 Зайти в админку и создать несколько тэгов.
 
-## 🧪 Примеры 
+## 🧪 Примеры запросов
 
 ```text
 http
@@ -143,7 +143,7 @@ https://foodgramdr.hopto.org/api/docs/
 
 ```
 ## 🛠 Ссылка на сайт
-<h3 align="center">
+<h3>
     <a href="http://foodgrm.hopto.org">http://foodgrm.hopto.org</a>
 </h3>
 
