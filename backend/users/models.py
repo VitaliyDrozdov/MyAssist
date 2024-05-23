@@ -8,7 +8,7 @@ from foodgram.constants import PASSWORD_MAX_LENGTH, USER_MAX_LENGTH
 class CustomUser(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username", "first_name", "last_name"]
-    email = models.EmailField(validators=[EmailValidator()], unique=True)
+    email = models.EmailField(unique=True)
     first_name = models.CharField(
         verbose_name="Имя",
         max_length=USER_MAX_LENGTH

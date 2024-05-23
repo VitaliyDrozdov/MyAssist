@@ -70,13 +70,14 @@ class UserViewSet(DjoserUserViewset):
         deleted, _ = Subscription.objects.filter(
             following=following, user=user
         ).delete()
-        if not deleted:
-            response_status = status.HTTP_400_BAD_REQUEST
-            response_data = "Пользователь отсутствует в подписках."
-        else:
-            response_status = status.HTTP_204_NO_CONTENT
-            response_data = None
-        return Response(response_data, status=response_status)
+        return (
+            Response(
+                "Пользователь отсутствует в подписках.",
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            if not deleted
+            else Response(status=status.HTTP_204_NO_CONTENT)
+        )
 
     @action(
         detail=False,

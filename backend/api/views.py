@@ -101,13 +101,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
         cur_recipe_deleted, _ = (
             getattr(request.user, related_name).filter(recipe=recipe).delete()
         )
-        if not cur_recipe_deleted:
-            response_status = HTTP_400_BAD_REQUEST
-            response_data = "Рецепт отсутствует в списке."
-        else:
-            response_status = HTTP_204_NO_CONTENT
-            response_data = None
-        return Response(response_data, status=response_status)
+        return (
+            Response(
+                "Рецепт отсутствует в списке.",
+                status=HTTP_400_BAD_REQUEST
+            )
+            if not cur_recipe_deleted
+            else Response(status=HTTP_204_NO_CONTENT)
+        )
 
     @action(detail=True, methods=["post"], url_path="favorite")
     def favorite(self, request, pk: int) -> Response:
