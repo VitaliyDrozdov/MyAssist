@@ -134,10 +134,10 @@ class SubscribeGetSerializer(CustomUserProfileSerializer):
 
         request = self.context.get("request")
         recipes = obj.recipes.all()
-        recipes_limit = request.query_params.get("recipes_limit")
+        recipes_limit = request.query_params.get("recipes_limit", 0)
         try:
             recipes = recipes[: int(recipes_limit)]
-        except TypeError:
+        except (TypeError, ValueError):
             pass
         serializer = RecipeShortSerializer(recipes, many=True, read_only=True)
         return serializer.data
