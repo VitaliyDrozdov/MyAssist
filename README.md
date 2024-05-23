@@ -13,7 +13,6 @@
 <h2 align="center">Разработано на технологиях</h2>
 
 <p align="center">
-	<img src="https://img.shields.io/badge/GNU%20Bash-4EAA25.svg?style=flat&logo=GNU-Bash&logoColor=white" alt="GNU%20Bash">
     <a href="https://www.python.org/">
 	    <img src="https://img.shields.io/pypi/pyversions/py?style=for-the-badge&logo=python)" alt="Python">
     </a>
@@ -145,7 +144,7 @@ https://foodgramdr.hopto.org/api/docs/
 ```
 ## 🛠 Ссылка
 <h3>
-    <a href="http://foodgrm.hopto.org">http://foodgrm.hopto.org</a>
+    <a href="https://foodgramdr.hopto.org/">https://foodgramdr.hopto.org/</a>
 </h3>
 
 ## Автор :
