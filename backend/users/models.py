@@ -1,5 +1,4 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import EmailValidator
 from django.db import models
 
 from foodgram.constants import PASSWORD_MAX_LENGTH, USER_MAX_LENGTH
