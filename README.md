@@ -29,6 +29,7 @@
     <a href="https://www.postgresql.org/">
         <img alt="PostgreSQL" src="https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white">
     </a>
+	 <br>
     <a href="https://gunicorn.org/">
         <img alt="gunicorn" src="https://img.shields.io/badge/gunicorn-%298729.svg?style=for-the-badge&logo=gunicorn&logoColor=white">
     </a>
