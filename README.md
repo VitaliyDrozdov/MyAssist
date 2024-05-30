@@ -14,7 +14,7 @@
 
 <p align="center">
     <a href="https://www.python.org/">
-	    <img src="https://img.shields.io/pypi/pyversions/py?style=for-the-badge&logo=python)" alt="Python">
+	    <img src="(ttps://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54">
     </a>
     <br>
     <a href="https://www.docker.com/">
