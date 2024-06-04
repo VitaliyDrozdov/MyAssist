@@ -1,9 +1,6 @@
 
-<h1 align="center">Foodgram - продуктовый помощник</h1>
+<h1 align="center"> Goods assistant - помощник для составления покупок</h1>
 
-<p>
-    <img align="center" src="frontend/src/images/logo-header.png" width="200">
-</p>
 
 <p>
     <a href= "https://github.com/VitaliyDrozdov/foodgram/actions/">
