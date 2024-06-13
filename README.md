@@ -1,5 +1,5 @@
 
-<h1 align="center"> Goods assistant - помощник для составления покупок</h1>
+<h1 align="center">  Myassist - приложение для составления списка необходимых продуктов </h1>
 
 
 <p>
@@ -142,7 +142,7 @@ https://foodgramdr.hopto.org/api/docs/
 ```
 ## 🛠 Ссылка
 <h3>
-    <a href="https://foodgramdr.hopto.org/">https://foodgramdr.hopto.org/</a>
+<!--     <a href="https://foodgramdr.hopto.org/">https://foodgramdr.hopto.org/</a> -->
 </h3>
 
 ## Автор :
